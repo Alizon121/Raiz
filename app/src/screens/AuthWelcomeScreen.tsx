@@ -4,11 +4,10 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { useEffect, useState } from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
-import DecorativeBackground from "../components/DecorativeBackground";
 import IconBadge from "../components/IconBadge";
 import { signInWithApple, signInWithGoogle } from "../auth/authService";
 import type { AuthStackParamList } from "../navigation/types";
-import { colors, spacing, typography } from "../theme";
+import { colors, pastels, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "AuthWelcome">;
 
@@ -38,9 +37,8 @@ export default function AuthWelcomeScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.hero}>
-        <DecorativeBackground />
-        <IconBadge name="leaf-outline" size={72} />
+      <View style={styles.header}>
+        <IconBadge name="leaf-outline" size={72} backgroundColor={pastels[0]} iconColor={colors.forest} />
         <Text style={styles.title}>Welcome to Raiz</Text>
         <Text style={styles.tagline}>Your produce, decoded.</Text>
       </View>
@@ -82,9 +80,9 @@ export default function AuthWelcomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
-  hero: { backgroundColor: colors.forest, alignItems: "center", justifyContent: "center", paddingTop: 96, paddingBottom: spacing.xxl },
-  title: { ...typography.h1, color: colors.textOnDark, marginTop: spacing.lg },
-  tagline: { ...typography.body, color: colors.textOnDarkMuted, marginTop: spacing.xs },
+  header: { alignItems: "center", justifyContent: "center", paddingTop: 96, paddingBottom: spacing.xl },
+  title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.lg },
+  tagline: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },
   sheet: { flex: 1, padding: spacing.xl, justifyContent: "center" },
   buttonSpacing: { marginBottom: spacing.md },
   error: { color: colors.danger, marginBottom: spacing.md, textAlign: "center" },

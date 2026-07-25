@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Shared, pre-computed crop data (written only by the ETL's
+    // firebase-admin script, which bypasses these rules entirely).
+    // Any signed-in user can read it; no client can ever write it.
+    match /crops/{cropId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Each user's own profile + subscription status. Only that user
+    // may read or write it — never another user, never signed-out.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Per-user scan history cache (build spec: users/{userId}/scanHistory/{scanId}).
+      match /scanHistory/{scanId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}

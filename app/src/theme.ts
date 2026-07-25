@@ -13,8 +13,12 @@ export const colors = {
   textSecondary: "#6B7280",
   border: "#E5E1D8",
   danger: "#B00020",
-  dotInactive: "rgba(255,255,255,0.35)",
+  dotInactive: "#DEDAD0",
 } as const;
+
+// Soft per-slide badge tints for the onboarding carousel — desaturated
+// enough to read as neutral background, not a saturated color chip.
+export const pastels = ["#E7EFE9", "#F5E9E8", "#F0EAE0", "#F4E7DE"] as const;
 
 export const spacing = {
   xs: 4,
