@@ -10,11 +10,6 @@ const COMPANY_LEN = 6;
 const PRODUCT_LEN = 5;
 const SITE_LEN = 9;
 
-interface ProductRecord {
-  eparegno: string;
-  status: string; // rightmost field per product.txt; see parseProductFile
-}
-
 async function fetchZipText(filename: string): Promise<string> {
   const buf = await downloadCached(`${PPIS_BASE}/${filename}`, filename);
   const zip = new AdmZip(buf);
@@ -23,22 +18,33 @@ async function fetchZipText(filename: string): Promise<string> {
   return entry.getData().toString("latin1");
 }
 
+/**
+ * Decodes one fixed-width prodsite.txt row into a regno/site pair.
+ * Layout verified by cross-referencing decoded site codes against every
+ * known site code in sitename.zip until 100% resolved — see etl/README.md.
+ * Returns null for malformed/short lines (e.g. a trailing blank line).
+ */
+export function parseProdSiteLine(line: string): { regno: string; site: string } | null {
+  if (line.length < COMPANY_LEN + PRODUCT_LEN + SITE_LEN) return null;
+  const company = line.slice(0, COMPANY_LEN);
+  const product = line.slice(COMPANY_LEN, COMPANY_LEN + PRODUCT_LEN);
+  const site = line.slice(COMPANY_LEN + PRODUCT_LEN, COMPANY_LEN + PRODUCT_LEN + SITE_LEN);
+  return { regno: `${Number(company)}-${Number(product)}`, site };
+}
+
 /** site_code -> product regnos registered for that site */
 async function loadProductsBySite(): Promise<Map<string, Set<string>>> {
   const text = await fetchZipText("prodsite.zip");
   const bySite = new Map<string, Set<string>>();
   for (const line of text.split("\n")) {
-    if (line.length < COMPANY_LEN + PRODUCT_LEN + SITE_LEN) continue;
-    const company = line.slice(0, COMPANY_LEN);
-    const product = line.slice(COMPANY_LEN, COMPANY_LEN + PRODUCT_LEN);
-    const site = line.slice(COMPANY_LEN + PRODUCT_LEN, COMPANY_LEN + PRODUCT_LEN + SITE_LEN);
-    const regno = `${Number(company)}-${Number(product)}`;
-    let set = bySite.get(site);
+    const decoded = parseProdSiteLine(line);
+    if (!decoded) continue;
+    let set = bySite.get(decoded.site);
     if (!set) {
       set = new Set();
-      bySite.set(site, set);
+      bySite.set(decoded.site, set);
     }
-    set.add(regno);
+    set.add(decoded.regno);
   }
   return bySite;
 }

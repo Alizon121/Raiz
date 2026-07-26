@@ -52,7 +52,7 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "lettuce-head",
     cropName: "Lettuce (Head)",
-    plu: ["4061", "4062"],
+    plu: ["4061"], // 4062 was previously (incorrectly) listed here too — that's cucumber's PLU, not lettuce's
     commonAliases: ["lettuce", "iceberg lettuce", "head lettuce"],
     quickStatsCommodity: "LETTUCE",
     epaSiteCodes: ["130280106"],

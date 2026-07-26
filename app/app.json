@@ -31,7 +31,14 @@
       "expo-apple-authentication",
       "expo-dev-client",
       "@react-native-google-signin/google-signin",
-      "expo-font"
+      "expo-font",
+      "expo-asset",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Raiz uses your camera to read PLU stickers on produce."
+        }
+      ]
     ]
   }
 }

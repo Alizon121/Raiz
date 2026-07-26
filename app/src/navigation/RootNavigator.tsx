@@ -7,14 +7,35 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import AuthWelcomeScreen from "../screens/AuthWelcomeScreen";
 import EmailAuthScreen from "../screens/EmailAuthScreen";
-import HomeScreen from "../screens/HomeScreen";
+import ManualEntryScreen from "../screens/ManualEntryScreen";
 import OnboardingScreen, { hasSeenOnboarding } from "../screens/OnboardingScreen";
+import ProduceDetailScreen from "../screens/ProduceDetailScreen";
+import ScanConfirmScreen from "../screens/ScanConfirmScreen";
+import ScanScreen from "../screens/ScanScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { colors } from "../theme";
-import type { AuthStackParamList } from "./types";
+import type { AuthStackParamList, ScanStackParamList } from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const ScanStack = createNativeStackNavigator<ScanStackParamList>();
 const MainTabs = createBottomTabNavigator();
+
+function ScanNavigator() {
+  return (
+    <ScanStack.Navigator
+      screenOptions={{
+        headerTintColor: colors.forest,
+        headerStyle: { backgroundColor: colors.cream },
+        headerShadowVisible: false,
+      }}
+    >
+      <ScanStack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
+      <ScanStack.Screen name="ScanConfirm" component={ScanConfirmScreen} options={{ title: "Confirm" }} />
+      <ScanStack.Screen name="ManualEntry" component={ManualEntryScreen} options={{ title: "Enter PLU" }} />
+      <ScanStack.Screen name="ProduceDetail" component={ProduceDetailScreen} options={{ title: "" }} />
+    </ScanStack.Navigator>
+  );
+}
 
 function MainNavigator() {
   return (
@@ -27,7 +48,7 @@ function MainNavigator() {
     >
       <MainTabs.Screen
         name="Scan"
-        component={HomeScreen}
+        component={ScanNavigator}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} /> }}
       />
       <MainTabs.Screen

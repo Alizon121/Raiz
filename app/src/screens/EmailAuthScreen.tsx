@@ -61,6 +61,7 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
         disabled={!email || !password}
         loading={busy}
         style={styles.submitButton}
+        testID="email-auth-submit"
       />
 
       <TouchableOpacity onPress={() => setMode(mode === "sign-in" ? "sign-up" : "sign-in")}>

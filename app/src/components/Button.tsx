@@ -13,6 +13,7 @@ interface ButtonProps {
   loading?: boolean;
   style?: ViewStyle;
   textColor?: string;
+  testID?: string;
 }
 
 const variantStyles: Record<Variant, { container: ViewStyle; text: { color: string } }> = {
@@ -21,7 +22,7 @@ const variantStyles: Record<Variant, { container: ViewStyle; text: { color: stri
   outline: { container: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border }, text: { color: colors.textPrimary } },
 };
 
-export default function Button({ label, onPress, variant = "primary", icon, disabled, loading, style, textColor }: ButtonProps) {
+export default function Button({ label, onPress, variant = "primary", icon, disabled, loading, style, textColor, testID }: ButtonProps) {
   const v = variantStyles[variant];
   const resolvedTextColor = textColor ?? v.text.color;
   return (
@@ -30,6 +31,7 @@ export default function Button({ label, onPress, variant = "primary", icon, disa
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.85}
+      testID={testID}
     >
       {loading ? (
         <ActivityIndicator color={resolvedTextColor} />
