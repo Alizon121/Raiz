@@ -3,10 +3,11 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { type ReactNode, useEffect, useState } from "react";
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
 import { getCropById } from "../services/cropLookup";
 import type { ScanStackParamList } from "../navigation/types";
 import type { Crop } from "../types/crop";
-import { colors, spacing, typography } from "../theme";
+import { colors, radii, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<ScanStackParamList, "ProduceDetail">;
 
@@ -57,15 +58,16 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
 
   if (crop === "error" || crop === null) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>{crop === null ? "Not found" : "Something went wrong"}</Text>
-        <Text style={styles.body}>
-          {crop === null
+      <EmptyState
+        title={crop === null ? "Not found" : "Something went wrong"}
+        body={
+          crop === null
             ? "This item no longer has data available."
-            : "We couldn't load this item right now. Check your connection and try again."}
-        </Text>
+            : "We couldn't load this item right now. Check your connection and try again."
+        }
+      >
         <Button label="Back to scan" onPress={() => navigation.navigate("Scan")} style={styles.backButton} />
-      </View>
+      </EmptyState>
     );
   }
 
@@ -206,15 +208,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream, padding: spacing.xl },
-  title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.sm, textAlign: "center" },
-  body: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.xl },
   backButton: { alignSelf: "stretch" },
   cropName: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.md },
   disclaimerBox: {
     flexDirection: "row",
     gap: spacing.sm,
     backgroundColor: colors.white,
-    borderRadius: 10,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   warningText: { ...typography.caption, color: colors.danger, marginBottom: spacing.xs },
   emptyText: { ...typography.body, color: colors.textSecondary, fontStyle: "italic" },
   footnote: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.sm },
-  card: { backgroundColor: colors.white, borderRadius: 10, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
+  card: { backgroundColor: colors.white, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
   row: {
     flexDirection: "row",
     alignItems: "center",

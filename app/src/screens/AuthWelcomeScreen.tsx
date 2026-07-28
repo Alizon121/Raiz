@@ -4,6 +4,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { useEffect, useState } from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import IconBadge from "../components/IconBadge";
 import { signInWithApple, signInWithGoogle } from "../auth/authService";
 import type { AuthStackParamList } from "../navigation/types";
@@ -38,8 +39,8 @@ export default function AuthWelcomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <IconBadge name="leaf-outline" size={102} iconColor={colors.forest} />
         <Text style={styles.title}>Welcome to Raiz</Text>
+        <Text style={styles.tagline}>Know what goes into making your produce.</Text>
       </View>
 
       <View style={styles.sheet}>
@@ -58,11 +59,9 @@ export default function AuthWelcomeScreen({ navigation }: Props) {
           />
         )}
 
-        <Button
-          label="Continue with Google"
-          variant="outline"
-          icon={<Ionicons name="logo-google" size={16} color={colors.textPrimary} />}
+        <GoogleSignInButton
           disabled={busy}
+          loading={busy}
           onPress={() => runAuthAction(signInWithGoogle)}
           style={styles.buttonSpacing}
         />

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
 import { lookupCropByPlu } from "../services/cropLookup";
 import { addScanHistoryEntry } from "../services/scanHistory";
 import type { ScanStackParamList } from "../navigation/types";
@@ -43,23 +44,22 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 
   if (state.status === "error") {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Something went wrong</Text>
-        <Text style={styles.body}>We couldn't look up PLU {plu} right now. Check your connection and try again.</Text>
+      <EmptyState title="Something went wrong" body={`We couldn't look up PLU ${plu} right now. Check your connection and try again.`}>
         <Button label="Try again" onPress={() => navigation.replace("ScanConfirm", { plu })} style={styles.button} />
         <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
-      </View>
+      </EmptyState>
     );
   }
 
   if (state.status === "not-found") {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>We don't have data for that yet</Text>
-        <Text style={styles.body}>PLU {plu} isn't in our database yet. Double-check the code, or try scanning again.</Text>
+      <EmptyState
+        title="We don't have data for that yet"
+        body={`PLU ${plu} isn't in our database yet. Double-check the code, or try scanning again.`}
+      >
         <Button label="Enter a different code" onPress={() => navigation.navigate("ManualEntry")} style={styles.button} />
         <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
-      </View>
+      </EmptyState>
     );
   }
 

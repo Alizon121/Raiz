@@ -2,9 +2,10 @@ import { type NavigationProp, type ParamListBase, useFocusEffect, useNavigation 
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
+import EmptyState from "../components/EmptyState";
 import { getScanHistory } from "../services/scanHistory";
 import type { ScanHistoryEntry } from "../types/scanHistory";
-import { colors, spacing, typography } from "../theme";
+import { colors, radii, spacing, typography } from "../theme";
 
 type State = "loading" | "error" | ScanHistoryEntry[];
 
@@ -44,15 +45,14 @@ export default function HistoryScreen() {
       )}
 
       {state === "error" && (
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>We couldn't load your history right now. Check your connection and try again.</Text>
-        </View>
+        <EmptyState
+          title="Something went wrong"
+          body="We couldn't load your history right now. Check your connection and try again."
+        />
       )}
 
       {Array.isArray(state) && state.length === 0 && (
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Start scanning to see a history of your scanned produce here</Text>
-        </View>
+        <EmptyState body="Start scanning to see a history of your scanned produce here" />
       )}
 
       {Array.isArray(state) && state.length > 0 && (
@@ -79,17 +79,16 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
-  title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
+  container: { flex: 1, padding: spacing.xl, backgroundColor: colors.cream },
+  title: { ...typography.title, color: colors.textPrimary, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
-  emptyText: { ...typography.body, color: colors.textSecondary, textAlign: "center" },
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: colors.white,
-    borderRadius: 10,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,

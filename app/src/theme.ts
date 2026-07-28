@@ -1,19 +1,26 @@
 // Single source of truth for colors/spacing/type so screens stay visually
 // consistent instead of each hand-rolling its own palette.
+//
+
 export const colors = {
-  forest: "#1F3A2E",
-  forestDark: "#16281F",
-  forestMuted: "rgba(255,255,255,0.14)",
+  forest: "#357A42",
+  forestDark: "#1F4A29",
+  // This one *is* literally rgba(109, 188, 109, 0.37) — it's used as a soft
+  // translucent badge backdrop (see IconBadge), exactly the role that color
+  // was made for.
+  forestMuted: "rgba(109, 188, 109, 0.37)",
   cream: "#F3F1EA",
   white: "#FFFFFF",
   black: "#000000",
   textOnDark: "#FFFFFF",
   textOnDarkMuted: "rgba(255,255,255,0.72)",
-  textPrimary: "#1F3A2E",
-  textSecondary: "#6B7280",
+  textPrimary: "#2C4A34",
+  textSecondary: "#4F6E58",
   border: "#E5E1D8",
   danger: "#B00020",
   dotInactive: "#DEDAD0",
+  sageSubtle: "rgba(109, 188, 109, 0.18)",
+  sageBold: "rgba(109, 188, 109, 0.55)",
 } as const;
 
 // Soft per-slide badge tints for the onboarding carousel — desaturated

@@ -7,7 +7,7 @@ import TextRecognition from "../../modules/raiz-text-recognition/src";
 import Button from "../components/Button";
 import { getAllKnownPlus } from "../services/cropLookup";
 import type { ScanStackParamList } from "../navigation/types";
-import { colors, spacing, typography } from "../theme";
+import { colors, radii, spacing, typography } from "../theme";
 import { extractPluCandidates, resolveBestPluCandidate } from "../utils/plu";
 
 type Props = NativeStackScreenProps<ScanStackParamList, "Scan">;
@@ -110,9 +110,9 @@ const styles = StyleSheet.create({
   permissionButton: { marginBottom: spacing.md },
   manualLink: { color: colors.forest, fontWeight: "600" },
   overlay: { flex: 1, justifyContent: "space-between", padding: spacing.lg },
-  frameHint: { alignSelf: "center", marginTop: spacing.xxl, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 999, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  frameHint: { alignSelf: "center", marginTop: spacing.xxl, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   frameHintText: { color: colors.white, fontWeight: "600" },
-  errorBanner: { backgroundColor: "rgba(176,0,32,0.9)", borderRadius: 10, padding: spacing.sm, marginBottom: spacing.md },
+  errorBanner: { backgroundColor: "rgba(176,0,32,0.9)", borderRadius: radii.md, padding: spacing.sm, marginBottom: spacing.md },
   errorText: { color: colors.white, textAlign: "center" },
   controls: { alignItems: "center", paddingBottom: spacing.xl },
   shutter: {

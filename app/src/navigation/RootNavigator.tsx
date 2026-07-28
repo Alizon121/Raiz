@@ -100,7 +100,7 @@ export default function RootNavigator() {
   if (initializing) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream }}>
-        <ActivityIndicator color={colors.forest} />
+        <ActivityIndicator color={colors.cream} />
       </View>
     );
   }
