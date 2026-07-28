@@ -79,7 +79,7 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing.xl, backgroundColor: colors.cream },
+  container: { flex: 1, paddingTop: 32, backgroundColor: colors.cream },
   title: { ...typography.title, color: colors.textPrimary, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },

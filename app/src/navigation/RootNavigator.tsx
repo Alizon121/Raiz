@@ -11,6 +11,7 @@ import HistoryScreen from "../screens/HistoryScreen";
 import ManualEntryScreen from "../screens/ManualEntryScreen";
 import OnboardingScreen, { hasSeenOnboarding } from "../screens/OnboardingScreen";
 import ProduceDetailScreen from "../screens/ProduceDetailScreen";
+import ResidueReductionTipsScreen from "../screens/ResidueReductionTipsScreen";
 import ScanConfirmScreen from "../screens/ScanConfirmScreen";
 import ScanScreen from "../screens/ScanScreen";
 import SettingsScreen from "../screens/SettingsScreen";
@@ -34,6 +35,11 @@ function ScanNavigator() {
       <ScanStack.Screen name="ScanConfirm" component={ScanConfirmScreen} options={{ title: "Confirm" }} />
       <ScanStack.Screen name="ManualEntry" component={ManualEntryScreen} options={{ title: "Enter PLU" }} />
       <ScanStack.Screen name="ProduceDetail" component={ProduceDetailScreen} options={{ title: "" }} />
+      <ScanStack.Screen
+        name="ResidueReductionTips"
+        component={ResidueReductionTipsScreen}
+        options={{ title: "Reducing Residue" }}
+      />
     </ScanStack.Navigator>
   );
 }
@@ -53,14 +59,14 @@ function MainNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} /> }}
       />
       <MainTabs.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
-      />
-      <MainTabs.Screen
         name="History"
         component={HistoryScreen}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} /> }}
+      />
+      <MainTabs.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
       />
     </MainTabs.Navigator>
   );

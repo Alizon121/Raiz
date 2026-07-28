@@ -149,10 +149,96 @@ test("omits the cumulative exposure note when there's only one finding", async (
   expect(screen.queryByText(FULL_CROP.residueData!.cumulativeExposureNote)).toBeNull();
 });
 
-test("renders residue-reduction tips", async () => {
+test("the at-a-glance card links to the Residue Reduction Tips screen, passing the crop's name and tips", async () => {
   mockGetCropById.mockResolvedValue(FULL_CROP);
   await renderScreen();
-  expect(screen.getByText(/Rinse under running water\./)).toBeTruthy();
+
+  await act(async () => {
+    fireEvent.press(screen.getByText("See tips to reduce residue"));
+  });
+  expect(mockNavigate).toHaveBeenCalledWith("ResidueReductionTips", {
+    cropName: "Apples",
+    tips: FULL_CROP.residueReductionTips,
+  });
+});
+
+test("omits the tips link when the crop has no residue-reduction tips", async () => {
+  mockGetCropById.mockResolvedValue({ ...FULL_CROP, residueReductionTips: [] });
+  await renderScreen();
+  expect(screen.queryByText("See tips to reduce residue")).toBeNull();
+});
+
+test("the at-a-glance summary counts active ingredients by category", async () => {
+  mockGetCropById.mockResolvedValue({
+    ...FULL_CROP,
+    chemicalUse: {
+      ...FULL_CROP.chemicalUse!,
+      topActiveIngredients: [
+        { name: "Carbaryl", percentAcresTreated: 51, category: "insecticide" },
+        { name: "Acetamiprid", percentAcresTreated: 41, category: "insecticide" },
+        { name: "Mancozeb", percentAcresTreated: 33, category: "fungicide" },
+      ],
+    },
+  });
+  await renderScreen();
+  expect(screen.getByText("2 insecticides")).toBeTruthy();
+  expect(screen.getByText("1 fungicide")).toBeTruthy();
+  expect(screen.queryByText(/herbicide/)).toBeNull();
+});
+
+test("the summary shows a fallback message instead of chips when chemicalUse is null", async () => {
+  mockGetCropById.mockResolvedValue({ ...FULL_CROP, chemicalUse: null });
+  await renderScreen();
+  expect(screen.getByText("No chemical use data available yet for this crop.")).toBeTruthy();
+});
+
+test("calls out residue findings at or above 75% of their legal tolerance, with the percentage", async () => {
+  mockGetCropById.mockResolvedValue({
+    ...FULL_CROP,
+    residueData: {
+      ...FULL_CROP.residueData!,
+      findings: [
+        { chemical: "Pyrimethanil", percentSamplesDetected: 74.1, medianConcentration: 0.715, legalTolerance: 15, toleranceNote: null, units: "ppm" },
+        { chemical: "Boscalid", percentSamplesDetected: 20, medianConcentration: 9, legalTolerance: 10, toleranceNote: null, units: "ppm" },
+      ],
+    },
+  });
+  await renderScreen();
+  expect(screen.getByText(/Worth a closer look/)).toBeTruthy();
+  expect(screen.getByText(/Boscalid \(90%\)/)).toBeTruthy();
+  expect(screen.getByText(/Near limit/)).toBeTruthy();
+});
+
+test("shows a reassurance line instead when no finding is close to its limit", async () => {
+  mockGetCropById.mockResolvedValue(FULL_CROP); // Pyrimethanil/Diazinon are both well under 75%
+  await renderScreen();
+  expect(screen.queryByText(/Worth a closer look/)).toBeNull();
+  expect(screen.queryByText(/Near limit/)).toBeNull();
+  expect(screen.getByText(/No chemicals were found near their legal tolerance levels/)).toBeTruthy();
+});
+
+test("shows neither the caution nor the reassurance line when there's no residue data at all", async () => {
+  mockGetCropById.mockResolvedValue({ ...FULL_CROP, residueData: null });
+  await renderScreen();
+  expect(screen.queryByText(/Worth a closer look/)).toBeNull();
+  expect(screen.queryByText(/No chemicals were found near their legal tolerance levels/)).toBeNull();
+});
+
+test("the summary's info toggle is hidden until tapped, then shows an explanation", async () => {
+  mockGetCropById.mockResolvedValue(FULL_CROP);
+  await renderScreen();
+
+  expect(screen.queryByText(/Counts how many/)).toBeNull();
+
+  await act(async () => {
+    fireEvent.press(screen.getByLabelText("What does this summary show?"));
+  });
+  expect(screen.getByText(/Counts how many/)).toBeTruthy();
+
+  await act(async () => {
+    fireEvent.press(screen.getByLabelText("What does this summary show?"));
+  });
+  expect(screen.queryByText(/Counts how many/)).toBeNull();
 });
 
 test("footer shows the formatted last-updated date and source citation links", async () => {

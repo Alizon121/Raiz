@@ -9,4 +9,5 @@ export type ScanStackParamList = {
   ScanConfirm: { plu: string };
   ManualEntry: undefined;
   ProduceDetail: { cropId: string };
+  ResidueReductionTips: { cropName: string; tips: string[] };
 };

@@ -21,6 +21,11 @@ export const colors = {
   dotInactive: "#DEDAD0",
   sageSubtle: "rgba(109, 188, 109, 0.18)",
   sageBold: "rgba(109, 188, 109, 0.55)",
+  // Amber, not red: for "closest to its legal tolerance, worth a look" —
+  // deliberately distinct from `danger`, since these findings are still
+  // under the legal limit and this isn't meant to read as an error/alarm.
+  caution: "#8A5A00",
+  cautionBg: "rgba(230, 162, 60, 0.22)",
 } as const;
 
 // Soft per-slide badge tints for the onboarding carousel — desaturated
