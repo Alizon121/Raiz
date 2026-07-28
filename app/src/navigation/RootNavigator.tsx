@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import AuthWelcomeScreen from "../screens/AuthWelcomeScreen";
 import EmailAuthScreen from "../screens/EmailAuthScreen";
+import HistoryScreen from "../screens/HistoryScreen";
 import ManualEntryScreen from "../screens/ManualEntryScreen";
 import OnboardingScreen, { hasSeenOnboarding } from "../screens/OnboardingScreen";
 import ProduceDetailScreen from "../screens/ProduceDetailScreen";
@@ -55,6 +56,11 @@ function MainNavigator() {
         name="Settings"
         component={SettingsScreen}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
+      />
+      <MainTabs.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} /> }}
       />
     </MainTabs.Navigator>
   );

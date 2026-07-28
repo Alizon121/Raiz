@@ -38,9 +38,8 @@ export default function AuthWelcomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <IconBadge name="leaf-outline" size={72} backgroundColor={pastels[0]} iconColor={colors.forest} />
+        <IconBadge name="leaf-outline" size={102} iconColor={colors.forest} />
         <Text style={styles.title}>Welcome to Raiz</Text>
-        <Text style={styles.tagline}>Your produce, decoded.</Text>
       </View>
 
       <View style={styles.sheet}>

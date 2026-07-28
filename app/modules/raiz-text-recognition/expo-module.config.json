@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["RaizTextRecognitionModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.raiztextrecognition.RaizTextRecognitionModule"]
+  }
+}

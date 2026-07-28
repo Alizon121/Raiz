@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
-import { signInWithEmail, signUpWithEmail } from "../auth/authService";
+import { getLinkedProviderLabel, isFirebaseAuthError, signInWithEmail, signUpWithEmail } from "../auth/authService";
 import type { AuthStackParamList } from "../navigation/types";
 import { colors, spacing, typography } from "../theme";
 
@@ -21,7 +21,16 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
     try {
       await (mode === "sign-in" ? signInWithEmail(email, password) : signUpWithEmail(email, password));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      if (mode === "sign-in" && isFirebaseAuthError(e, "auth/invalid-credential")) {
+        const provider = await getLinkedProviderLabel(email).catch(() => null);
+        setError(
+          provider
+            ? `This account is linked with ${provider}. Try "Continue with ${provider}" instead.`
+            : "Incorrect email or password.",
+        );
+      } else {
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+      }
     } finally {
       setBusy(false);
     }

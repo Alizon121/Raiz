@@ -1,8 +1,10 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import { lookupCropByPlu } from "../services/cropLookup";
+import { addScanHistoryEntry } from "../services/scanHistory";
 import type { ScanStackParamList } from "../navigation/types";
 import type { Crop } from "../types/crop";
 import { colors, spacing, typography } from "../theme";
@@ -12,6 +14,7 @@ type LookupState = { status: "loading" } | { status: "found"; crop: Crop } | { s
 
 export default function ScanConfirmScreen({ route, navigation }: Props) {
   const { plu } = route.params;
+  const { user } = useAuth();
   const [state, setState] = useState<LookupState>({ status: "loading" });
 
   useEffect(() => {
@@ -69,7 +72,12 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
       <Text style={styles.body}>Is that right?</Text>
       <Button
         label="Yes, that's right"
-        onPress={() => navigation.replace("ProduceDetail", { cropId: crop.cropId })}
+        onPress={() => {
+          // Fire-and-forget: history is a nice-to-have log, not something
+          // that should block or fail the user's actual navigation forward.
+          if (user) addScanHistoryEntry(user.uid, { cropId: crop.cropId, cropName: crop.cropName, plu }).catch(() => {});
+          navigation.replace("ProduceDetail", { cropId: crop.cropId });
+        }}
         style={styles.button}
       />
       <Button label="No, enter it manually" variant="outline" onPress={() => navigation.navigate("ManualEntry")} style={styles.button} />

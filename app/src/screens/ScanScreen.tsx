@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import TextRecognition from "@react-native-ml-kit/text-recognition";
+import TextRecognition from "../../modules/raiz-text-recognition/src";
 import Button from "../components/Button";
 import { getAllKnownPlus } from "../services/cropLookup";
 import type { ScanStackParamList } from "../navigation/types";

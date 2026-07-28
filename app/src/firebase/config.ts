@@ -4,6 +4,7 @@ import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 // but isn't in the package's public TS types yet; see README for details.
 import { type Auth, getReactNativePersistence, initializeAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 
 // These are public client identifiers (not secrets) — Firebase's own docs
 // confirm it's safe to ship them in a client bundle; access control happens
@@ -37,3 +38,4 @@ export const auth: Auth = initializeAuth(firebaseApp, {
 });
 
 export const db = getFirestore(firebaseApp);
+export const functions = getFunctions(firebaseApp);

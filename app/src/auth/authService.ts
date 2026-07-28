@@ -8,10 +8,44 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
 } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { httpsCallable } from "firebase/functions";
+import { auth, functions } from "../firebase/config";
 
 export async function signInWithEmail(email: string, password: string) {
   return signInWithEmailAndPassword(auth, email, password);
+}
+
+/**
+ * Deliberately duck-types on `.code` rather than `error instanceof
+ * FirebaseError` — under Metro, firebase/app and firebase/auth can end up
+ * bundling separate copies of the underlying @firebase/util class, which
+ * makes instanceof unreliable even though the thrown error genuinely has
+ * the right code. This works regardless of which copy constructed it.
+ */
+export function isFirebaseAuthError(error: unknown, code: string): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === code;
+}
+
+const PROVIDER_LABELS: Record<string, string> = {
+  "google.com": "Google",
+  "apple.com": "Apple",
+};
+
+/**
+ * Firebase's client SDK can't tell you which provider an email is
+ * registered with (fetchSignInMethodsForEmail always returns [] under Email
+ * Enumeration Protection, which is on by default and can't be disabled per
+ * project). This calls a Cloud Function backed by the Admin SDK instead, so
+ * we can turn a generic "invalid credential" into "you signed up with
+ * Google" when that's genuinely what happened. Only call this after a
+ * password sign-in has already failed — see EmailAuthScreen — so it doesn't
+ * become its own account-enumeration oracle.
+ */
+export async function getLinkedProviderLabel(email: string): Promise<string | null> {
+  const getSignInMethods = httpsCallable<{ email: string }, { providers: string[] }>(functions, "getSignInMethods");
+  const { data } = await getSignInMethods({ email });
+  const provider = data.providers.find((p) => p in PROVIDER_LABELS);
+  return provider ? PROVIDER_LABELS[provider] : null;
 }
 
 export async function signUpWithEmail(email: string, password: string) {

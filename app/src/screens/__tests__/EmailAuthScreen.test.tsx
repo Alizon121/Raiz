@@ -3,9 +3,14 @@ import EmailAuthScreen from "../EmailAuthScreen";
 
 const mockSignInWithEmail = jest.fn();
 const mockSignUpWithEmail = jest.fn();
+const mockGetLinkedProviderLabel = jest.fn();
 jest.mock("../../auth/authService", () => ({
   signInWithEmail: (...args: unknown[]) => mockSignInWithEmail(...args),
   signUpWithEmail: (...args: unknown[]) => mockSignUpWithEmail(...args),
+  getLinkedProviderLabel: (...args: unknown[]) => mockGetLinkedProviderLabel(...args),
+  // Mirrors the real implementation closely enough for these tests: real
+  // FirebaseErrors carry a `.code` string, which is all this checks.
+  isFirebaseAuthError: (error: unknown, code: string) => (error as { code?: string } | null)?.code === code,
 }));
 
 const mockGoBack = jest.fn();
@@ -91,6 +96,30 @@ test("a failed sign-in surfaces the error message", async () => {
   await renderScreen("sign-in");
   await fillAndSubmit("a@b.com", "wrong");
   expect(screen.getByText("wrong password")).toBeTruthy();
+});
+
+test("an invalid-credential error for an account linked to Google names the provider", async () => {
+  mockSignInWithEmail.mockRejectedValue({ code: "auth/invalid-credential" });
+  mockGetLinkedProviderLabel.mockResolvedValue("Google");
+  await renderScreen("sign-in");
+  await fillAndSubmit("a@b.com", "wrong");
+  expect(mockGetLinkedProviderLabel).toHaveBeenCalledWith("a@b.com");
+  expect(screen.getByText('This account is linked with Google. Try "Continue with Google" instead.')).toBeTruthy();
+});
+
+test("an invalid-credential error with no linked provider falls back to a generic message", async () => {
+  mockSignInWithEmail.mockRejectedValue({ code: "auth/invalid-credential" });
+  mockGetLinkedProviderLabel.mockResolvedValue(null);
+  await renderScreen("sign-in");
+  await fillAndSubmit("a@b.com", "wrong");
+  expect(screen.getByText("Incorrect email or password.")).toBeTruthy();
+});
+
+test("an invalid-credential error in sign-up mode does not look up linked providers", async () => {
+  mockSignUpWithEmail.mockRejectedValue({ code: "auth/invalid-credential", message: "boom" });
+  await renderScreen("sign-up");
+  await fillAndSubmit("new@b.com", "hunter2");
+  expect(mockGetLinkedProviderLabel).not.toHaveBeenCalled();
 });
 
 test("toggling \"Need an account? Sign up\" switches mode locally without navigating", async () => {

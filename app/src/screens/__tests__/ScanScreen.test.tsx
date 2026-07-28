@@ -18,7 +18,7 @@ jest.mock("expo-camera", () => {
 });
 
 const mockRecognize = jest.fn();
-jest.mock("@react-native-ml-kit/text-recognition", () => ({
+jest.mock("../../../modules/raiz-text-recognition/src", () => ({
   __esModule: true,
   default: { recognize: (...args: unknown[]) => mockRecognize(...args) },
 }));

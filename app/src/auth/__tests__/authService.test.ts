@@ -2,7 +2,7 @@
 // mocked — this suite verifies our own glue logic (nonce hashing, credential
 // construction, error paths), not the SDKs themselves.
 
-jest.mock("../../firebase/config", () => ({ auth: { __fake: "auth" } }));
+jest.mock("../../firebase/config", () => ({ auth: { __fake: "auth" }, functions: { __fake: "functions" } }));
 
 const mockSignInWithEmailAndPassword = jest.fn();
 const mockCreateUserWithEmailAndPassword = jest.fn();
@@ -18,6 +18,12 @@ jest.mock("firebase/auth", () => ({
   signInWithCredential: (...args: unknown[]) => mockSignInWithCredential(...args),
   OAuthProvider: jest.fn().mockImplementation(() => ({ credential: mockOAuthProviderCredential })),
   GoogleAuthProvider: { credential: (...args: unknown[]) => mockGoogleAuthProviderCredential(...args) },
+}));
+
+const mockGetSignInMethodsCallable = jest.fn();
+const mockHttpsCallable = jest.fn((..._args: unknown[]) => mockGetSignInMethodsCallable);
+jest.mock("firebase/functions", () => ({
+  httpsCallable: (...args: unknown[]) => mockHttpsCallable(...args),
 }));
 
 const mockAppleSignInAsync = jest.fn();
@@ -41,7 +47,15 @@ jest.mock("@react-native-google-signin/google-signin", () => ({
   },
 }));
 
-import { signInWithApple, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail } from "../authService";
+import {
+  getLinkedProviderLabel,
+  isFirebaseAuthError,
+  signInWithApple,
+  signInWithEmail,
+  signInWithGoogle,
+  signOut,
+  signUpWithEmail,
+} from "../authService";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -121,5 +135,56 @@ describe("signInWithGoogle", () => {
 
     await expect(signInWithGoogle()).rejects.toThrow("Google sign-in did not return an ID token.");
     expect(mockSignInWithCredential).not.toHaveBeenCalled();
+  });
+});
+
+describe("isFirebaseAuthError", () => {
+  it("is true for an error object with a matching code", () => {
+    expect(isFirebaseAuthError({ code: "auth/invalid-credential" }, "auth/invalid-credential")).toBe(true);
+  });
+
+  it("is false for an error object with a different code", () => {
+    expect(isFirebaseAuthError({ code: "auth/wrong-password" }, "auth/invalid-credential")).toBe(false);
+  });
+
+  it("checks the `.code` property rather than the error's class, since Metro can bundle firebase/app's FirebaseError as a different class identity than the one firebase/auth actually throws", () => {
+    class SomeOtherErrorClass extends Error {
+      code = "auth/invalid-credential";
+    }
+    expect(isFirebaseAuthError(new SomeOtherErrorClass(), "auth/invalid-credential")).toBe(true);
+  });
+
+  it("is false for a plain Error or non-error value with no code", () => {
+    expect(isFirebaseAuthError(new Error("auth/invalid-credential"), "auth/invalid-credential")).toBe(false);
+    expect(isFirebaseAuthError(null, "auth/invalid-credential")).toBe(false);
+  });
+});
+
+describe("getLinkedProviderLabel", () => {
+  it("calls the getSignInMethods Cloud Function with the given email", async () => {
+    mockGetSignInMethodsCallable.mockResolvedValue({ data: { providers: [] } });
+
+    await getLinkedProviderLabel("a@b.com");
+
+    expect(mockHttpsCallable).toHaveBeenCalledWith({ __fake: "functions" }, "getSignInMethods");
+    expect(mockGetSignInMethodsCallable).toHaveBeenCalledWith({ email: "a@b.com" });
+  });
+
+  it("maps a google.com provider to the label \"Google\"", async () => {
+    mockGetSignInMethodsCallable.mockResolvedValue({ data: { providers: ["google.com"] } });
+    await expect(getLinkedProviderLabel("a@b.com")).resolves.toBe("Google");
+  });
+
+  it("maps an apple.com provider to the label \"Apple\"", async () => {
+    mockGetSignInMethodsCallable.mockResolvedValue({ data: { providers: ["apple.com"] } });
+    await expect(getLinkedProviderLabel("a@b.com")).resolves.toBe("Apple");
+  });
+
+  it("resolves null when the only provider is password (or there are none)", async () => {
+    mockGetSignInMethodsCallable.mockResolvedValue({ data: { providers: ["password"] } });
+    await expect(getLinkedProviderLabel("a@b.com")).resolves.toBeNull();
+
+    mockGetSignInMethodsCallable.mockResolvedValue({ data: { providers: [] } });
+    await expect(getLinkedProviderLabel("a@b.com")).resolves.toBeNull();
   });
 });

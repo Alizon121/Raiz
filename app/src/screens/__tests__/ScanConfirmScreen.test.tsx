@@ -6,12 +6,24 @@ jest.mock("../../services/cropLookup", () => ({
   lookupCropByPlu: (...args: unknown[]) => mockLookupCropByPlu(...args),
 }));
 
+const mockAddScanHistoryEntry = jest.fn();
+jest.mock("../../services/scanHistory", () => ({
+  addScanHistoryEntry: (...args: unknown[]) => mockAddScanHistoryEntry(...args),
+}));
+
+const mockUseAuth = jest.fn();
+jest.mock("../../auth/AuthContext", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
 const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
 const navigation = { navigate: mockNavigate, replace: mockReplace } as never;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUseAuth.mockReturnValue({ user: { uid: "user-1" } });
+  mockAddScanHistoryEntry.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
 
@@ -37,6 +49,30 @@ test("when the crop is found, shows the name for confirmation and offers Yes/No"
   await act(async () => {
     fireEvent.press(screen.getByText("Yes, that's right"));
   });
+  expect(mockReplace).toHaveBeenCalledWith("ProduceDetail", { cropId: "apple" });
+  expect(mockAddScanHistoryEntry).toHaveBeenCalledWith("user-1", { cropId: "apple", cropName: "Apples", plu: "4131" });
+});
+
+test("confirming still navigates even if logging the scan history entry fails", async () => {
+  mockLookupCropByPlu.mockResolvedValue({ cropId: "apple", cropName: "Apples" });
+  mockAddScanHistoryEntry.mockRejectedValue(new Error("offline"));
+  await renderScreen("4131");
+
+  await act(async () => {
+    fireEvent.press(screen.getByText("Yes, that's right"));
+  });
+  expect(mockReplace).toHaveBeenCalledWith("ProduceDetail", { cropId: "apple" });
+});
+
+test("confirming without a signed-in user skips logging but still navigates", async () => {
+  mockUseAuth.mockReturnValue({ user: null });
+  mockLookupCropByPlu.mockResolvedValue({ cropId: "apple", cropName: "Apples" });
+  await renderScreen("4131");
+
+  await act(async () => {
+    fireEvent.press(screen.getByText("Yes, that's right"));
+  });
+  expect(mockAddScanHistoryEntry).not.toHaveBeenCalled();
   expect(mockReplace).toHaveBeenCalledWith("ProduceDetail", { cropId: "apple" });
 });
 
