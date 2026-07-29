@@ -1,9 +1,10 @@
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import type { ScanStackParamList } from "../navigation/types";
 import { colors, radii, spacing, typography } from "../theme";
 
-type Props = NativeStackScreenProps<ScanStackParamList, "ResidueReductionTips">;
+// Reachable from both the Scan tab and the History tab — see the comment on
+// HistoryStackParamList — so this is typed against just the params it
+// reads, not one specific stack's full ParamList.
+type Props = { route: { params: { cropName: string; tips: string[] } } };
 
 export default function ResidueReductionTipsScreen({ route }: Props) {
   const { cropName, tips } = route.params;
@@ -28,7 +29,7 @@ export default function ResidueReductionTipsScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.sm },
   body: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg },

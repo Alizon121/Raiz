@@ -1,21 +1,23 @@
-import { type NavigationProp, type ParamListBase, useFocusEffect, useNavigation } from "@react-navigation/native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import EmptyState from "../components/EmptyState";
+import type { HistoryStackParamList } from "../navigation/types";
 import { getScanHistory } from "../services/scanHistory";
 import type { ScanHistoryEntry } from "../types/scanHistory";
 import { colors, radii, spacing, typography } from "../theme";
 
+type Props = NativeStackScreenProps<HistoryStackParamList, "History">;
 type State = "loading" | "error" | ScanHistoryEntry[];
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function HistoryScreen() {
+export default function HistoryScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const [state, setState] = useState<State>("loading");
 
   // Refetches every time History becomes the focused tab, so a scan made
@@ -63,7 +65,7 @@ export default function HistoryScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.row}
-              onPress={() => navigation.navigate("Scan", { screen: "ProduceDetail", params: { cropId: item.cropId } })}
+              onPress={() => navigation.navigate("ProduceDetail", { cropId: item.cropId })}
             >
               <View style={styles.rowTextGroup}>
                 <Text style={styles.rowTitle}>{item.cropName}</Text>
@@ -79,10 +81,10 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 32, backgroundColor: colors.cream },
-  title: { ...typography.title, color: colors.textPrimary, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
+  container: { flex: 1, paddingTop: 32, backgroundColor: colors.background },
+  title: { ...typography.title, color: colors.forest, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
-  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
+  list: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   rowTextGroup: { flex: 1, paddingRight: spacing.sm },
-  rowTitle: { ...typography.body, color: colors.textPrimary, fontWeight: "600" },
+  rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
   rowMeta: { ...typography.caption, color: colors.textSecondary },
   rowDate: { ...typography.caption, color: colors.textSecondary },
 });

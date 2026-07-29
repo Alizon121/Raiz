@@ -16,21 +16,22 @@ import ScanConfirmScreen from "../screens/ScanConfirmScreen";
 import ScanScreen from "../screens/ScanScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { colors } from "../theme";
-import type { AuthStackParamList, ScanStackParamList } from "./types";
+import type { AuthStackParamList, HistoryStackParamList, ScanStackParamList } from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const ScanStack = createNativeStackNavigator<ScanStackParamList>();
+const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 const MainTabs = createBottomTabNavigator();
+
+const detailStackScreenOptions = {
+  headerTintColor: colors.forest,
+  headerStyle: { backgroundColor: colors.background },
+  headerShadowVisible: false,
+};
 
 function ScanNavigator() {
   return (
-    <ScanStack.Navigator
-      screenOptions={{
-        headerTintColor: colors.forest,
-        headerStyle: { backgroundColor: colors.cream },
-        headerShadowVisible: false,
-      }}
-    >
+    <ScanStack.Navigator screenOptions={detailStackScreenOptions}>
       <ScanStack.Screen name="Scan" component={ScanScreen} options={{ headerShown: false }} />
       <ScanStack.Screen name="ScanConfirm" component={ScanConfirmScreen} options={{ title: "Confirm" }} />
       <ScanStack.Screen name="ManualEntry" component={ManualEntryScreen} options={{ title: "Enter PLU" }} />
@@ -41,6 +42,20 @@ function ScanNavigator() {
         options={{ title: "Reducing Residue" }}
       />
     </ScanStack.Navigator>
+  );
+}
+
+function HistoryNavigator() {
+  return (
+    <HistoryStack.Navigator screenOptions={detailStackScreenOptions}>
+      <HistoryStack.Screen name="History" component={HistoryScreen} options={{ headerShown: false }} />
+      <HistoryStack.Screen name="ProduceDetail" component={ProduceDetailScreen} options={{ title: "" }} />
+      <HistoryStack.Screen
+        name="ResidueReductionTips"
+        component={ResidueReductionTipsScreen}
+        options={{ title: "Reducing Residue" }}
+      />
+    </HistoryStack.Navigator>
   );
 }
 
@@ -60,7 +75,7 @@ function MainNavigator() {
       />
       <MainTabs.Screen
         name="History"
-        component={HistoryScreen}
+        component={HistoryNavigator}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} /> }}
       />
       <MainTabs.Screen
@@ -81,7 +96,7 @@ function SignedOutNavigator() {
 
   if (onboardingDone === null) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
         <ActivityIndicator color={colors.forest} />
       </View>
     );
@@ -105,8 +120,8 @@ export default function RootNavigator() {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream }}>
-        <ActivityIndicator color={colors.cream} />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.background} />
       </View>
     );
   }

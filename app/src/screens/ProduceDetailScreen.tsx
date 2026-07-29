@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { type ReactNode, useEffect, useState } from "react";
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
 import { getCropById } from "../services/cropLookup";
 import { countActiveIngredientsByCategory, findingsNearTolerance, percentOfTolerance } from "../utils/chemicalProfile";
-import type { ScanStackParamList } from "../navigation/types";
 import type { ActiveIngredientUse, Crop } from "../types/crop";
 import { colors, radii, spacing, typography } from "../theme";
 
@@ -17,7 +16,14 @@ const CATEGORY_LABELS: Record<ActiveIngredientUse["category"], string> = {
   other: "other",
 };
 
-type Props = NativeStackScreenProps<ScanStackParamList, "ProduceDetail">;
+// Reachable from both the Scan tab and the History tab (see
+// HistoryStackParamList) — typed loosely against whichever stack hosts it
+// rather than one specific ParamList, since it only ever navigates to
+// "ResidueReductionTips" (present in both) and calls goBack() otherwise.
+type Props = {
+  navigation: NavigationProp<ParamListBase>;
+  route: { params: { cropId: string } };
+};
 
 const SOURCE_LINKS = [
   { label: "USDA NASS Quick Stats", url: "https://quickstats.nass.usda.gov" },
@@ -75,7 +81,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
             : "We couldn't load this item right now. Check your connection and try again."
         }
       >
-        <Button label="Back to scan" onPress={() => navigation.navigate("Scan")} style={styles.backButton} />
+        <Button label="Go back" onPress={() => navigation.goBack()} style={styles.backButton} />
       </EmptyState>
     );
   }
@@ -276,9 +282,9 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream, padding: spacing.xl },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
   backButton: { alignSelf: "stretch" },
   cropName: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.md },
   disclaimerBox: {

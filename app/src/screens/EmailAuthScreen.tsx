@@ -75,7 +75,7 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: spacing.xl, backgroundColor: colors.cream },
+  container: { flex: 1, justifyContent: "center", padding: spacing.xl, backgroundColor: colors.background },
   back: { position: "absolute", top: 64, left: spacing.lg },
   backText: { color: colors.forest, fontSize: 16, fontWeight: "600" },
   title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.xl, textAlign: "center" },

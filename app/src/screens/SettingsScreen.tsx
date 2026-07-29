@@ -37,7 +37,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing.xl, backgroundColor: colors.cream },
+  container: { flex: 1, padding: spacing.xl, backgroundColor: colors.background },
   title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.xl, marginBottom: spacing.md },
   email: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl },
   signOutButton: { borderColor: colors.danger },

@@ -103,7 +103,7 @@ export default function ScanScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.black },
   camera: { flex: 1 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream, padding: spacing.xl },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
   permissionIcon: { marginBottom: spacing.md },
   permissionTitle: { ...typography.h2, color: colors.textPrimary, marginBottom: spacing.sm },
   permissionBody: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.lg },

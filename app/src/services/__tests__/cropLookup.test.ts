@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 jest.mock("../../firebase/config", () => ({ db: { __fake: "db" } }));
 
 const mockCollection = jest.fn((_db, name) => ({ __fake: "collectionRef", name }));
@@ -31,8 +33,9 @@ const RAW_APPLE_DOC = {
   lastUpdated: { toDate: () => new Date("2026-01-15T00:00:00Z") },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
+  await AsyncStorage.clear();
 });
 
 describe("lookupCropByPlu", () => {
@@ -71,6 +74,15 @@ describe("lookupCropByPlu", () => {
       lastUpdated: new Date("2026-01-15T00:00:00Z"),
     });
   });
+
+  test("caches the crop it finds, so a later getCropById for the same ID skips Firestore", async () => {
+    mockGetDocs.mockResolvedValue({ empty: false, docs: [{ id: "apple", data: () => RAW_APPLE_DOC }] });
+    await lookupCropByPlu("4131");
+
+    const result = await getCropById("apple");
+    expect(result?.cropName).toBe("Apples");
+    expect(mockGetDoc).not.toHaveBeenCalled();
+  });
 });
 
 describe("getCropById", () => {
@@ -86,6 +98,29 @@ describe("getCropById", () => {
     expect(result?.cropId).toBe("apple");
     expect(result?.cropName).toBe("Apples");
     expect(mockDoc).toHaveBeenCalledWith({ __fake: "db" }, "crops", "apple");
+  });
+
+  test("a second call for the same crop ID is served from the cache, without hitting Firestore again", async () => {
+    mockGetDoc.mockResolvedValue({ exists: () => true, data: () => RAW_APPLE_DOC });
+
+    await getCropById("apple");
+    mockGetDoc.mockClear();
+    const second = await getCropById("apple");
+
+    expect(second?.cropName).toBe("Apples");
+    expect(mockGetDoc).not.toHaveBeenCalled();
+  });
+
+  test("a lookup that finds nothing is not cached, so it re-queries Firestore next time", async () => {
+    mockGetDoc.mockResolvedValue({ exists: () => false });
+
+    await getCropById("nonexistent");
+    mockGetDoc.mockClear();
+    mockGetDoc.mockResolvedValue({ exists: () => true, data: () => RAW_APPLE_DOC });
+    const second = await getCropById("nonexistent");
+
+    expect(mockGetDoc).toHaveBeenCalledTimes(1);
+    expect(second?.cropName).toBe("Apples");
   });
 });
 

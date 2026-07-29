@@ -86,7 +86,7 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream, padding: spacing.xl },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
   readAs: { ...typography.caption, color: colors.textSecondary },
   pluCode: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.sm },
   title: { ...typography.h1, color: colors.textPrimary, textAlign: "center", marginBottom: spacing.sm },

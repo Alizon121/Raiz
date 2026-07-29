@@ -117,7 +117,7 @@ export async function resetOnboarding(): Promise<void> {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 0.65 },
   skip: {
     position: "absolute",

@@ -9,7 +9,8 @@ jest.mock("../../services/cropLookup", () => ({
 }));
 
 const mockNavigate = jest.fn();
-const navigation = { navigate: mockNavigate } as never;
+const mockGoBack = jest.fn();
+const navigation = { navigate: mockNavigate, goBack: mockGoBack } as never;
 
 const FULL_CROP: Crop = {
   cropId: "apple",
@@ -57,15 +58,15 @@ test("shows a not-found state when the crop doesn't exist", async () => {
   expect(screen.getByText("Not found")).toBeTruthy();
 });
 
-test("shows an error state when the lookup fails, with a way back to Scan", async () => {
+test("shows an error state when the lookup fails, with a way back to wherever the user came from", async () => {
   mockGetCropById.mockRejectedValue(new Error("offline"));
   await renderScreen();
   expect(screen.getByText("Something went wrong")).toBeTruthy();
 
   await act(async () => {
-    fireEvent.press(screen.getByText("Back to scan"));
+    fireEvent.press(screen.getByText("Go back"));
   });
-  expect(mockNavigate).toHaveBeenCalledWith("Scan");
+  expect(mockGoBack).toHaveBeenCalledTimes(1);
 });
 
 test("always shows the \"not a lab test of your item\" disclaimer", async () => {

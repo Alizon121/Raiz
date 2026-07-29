@@ -77,7 +77,7 @@ export default function AuthWelcomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.background },
   header: { alignItems: "center", justifyContent: "center", paddingTop: 96, paddingBottom: spacing.xl },
   title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.lg },
   tagline: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },

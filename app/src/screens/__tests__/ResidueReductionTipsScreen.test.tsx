@@ -3,9 +3,7 @@ import ResidueReductionTipsScreen from "../ResidueReductionTipsScreen";
 
 async function renderScreen(cropName: string, tips: string[]) {
   await act(async () => {
-    render(
-      <ResidueReductionTipsScreen navigation={{} as never} route={{ params: { cropName, tips } } as never} />,
-    );
+    render(<ResidueReductionTipsScreen route={{ params: { cropName, tips } } as never} />);
   });
 }
 

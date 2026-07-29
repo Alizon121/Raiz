@@ -1,9 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react-native";
 import HistoryScreen from "../HistoryScreen";
 
-const mockNavigate = jest.fn();
 jest.mock("@react-navigation/native", () => ({
-  useNavigation: () => ({ navigate: (...args: unknown[]) => mockNavigate(...args) }),
   // Runs the focus callback once on mount, which is enough to exercise the
   // fetch-on-focus logic without a real NavigationContainer in these tests.
   useFocusEffect: (callback: () => void | (() => void)) => {
@@ -12,6 +10,9 @@ jest.mock("@react-navigation/native", () => ({
     useEffect(() => callback(), []);
   },
 }));
+
+const mockNavigate = jest.fn();
+const navigation = { navigate: mockNavigate } as never;
 
 const mockUseAuth = jest.fn();
 jest.mock("../../auth/AuthContext", () => ({
@@ -31,7 +32,7 @@ afterEach(cleanup);
 
 async function renderScreen() {
   await act(async () => {
-    render(<HistoryScreen />);
+    render(<HistoryScreen navigation={navigation} route={{} as never} />);
   });
 }
 
@@ -67,7 +68,7 @@ test("renders each scan with its crop name, PLU, and date, most-recent-first as 
   expect(screen.getByText("PLU 4131")).toBeTruthy();
 });
 
-test("tapping a row navigates into the Scan stack's ProduceDetail screen for that crop", async () => {
+test("tapping a row navigates to ProduceDetail within the History stack", async () => {
   mockGetScanHistory.mockResolvedValue([
     { id: "scan-1", cropId: "apple", cropName: "Apples", plu: "4131", scannedAt: new Date("2026-01-15T00:00:00Z") },
   ]);
@@ -77,7 +78,7 @@ test("tapping a row navigates into the Scan stack's ProduceDetail screen for tha
     fireEvent.press(screen.getByText("Apples"));
   });
 
-  expect(mockNavigate).toHaveBeenCalledWith("Scan", { screen: "ProduceDetail", params: { cropId: "apple" } });
+  expect(mockNavigate).toHaveBeenCalledWith("ProduceDetail", { cropId: "apple" });
 });
 
 test("does not fetch when there is no signed-in user", async () => {

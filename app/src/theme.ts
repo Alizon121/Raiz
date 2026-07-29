@@ -9,16 +9,20 @@ export const colors = {
   // translucent badge backdrop (see IconBadge), exactly the role that color
   // was made for.
   forestMuted: "rgba(109, 188, 109, 0.37)",
-  cream: "#F3F1EA",
+  // Very light, cool, barely-tinted sage-white rather than a warm cream —
+  // reads as clean/professional while still tying back to the green brand,
+  // instead of either a stark clinical white or a warmer "farmers-market"
+  // cream. Every screen background pulls from this one token.
+  background: "#F6F8F5",
   white: "#FFFFFF",
   black: "#000000",
   textOnDark: "#FFFFFF",
   textOnDarkMuted: "rgba(255,255,255,0.72)",
   textPrimary: "#2C4A34",
   textSecondary: "#4F6E58",
-  border: "#E5E1D8",
+  border: "#DEE3DC",
   danger: "#B00020",
-  dotInactive: "#DEDAD0",
+  dotInactive: "#D7DED6",
   sageSubtle: "rgba(109, 188, 109, 0.18)",
   sageBold: "rgba(109, 188, 109, 0.55)",
   // Amber, not red: for "closest to its legal tolerance, worth a look" —

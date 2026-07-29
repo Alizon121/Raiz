@@ -1,7 +1,8 @@
 jest.mock("../../firebase/config", () => ({ db: { __fake: "db" } }));
 
 const mockCollection = jest.fn((...args: unknown[]) => ({ __fake: "collectionRef", args }));
-const mockAddDoc = jest.fn();
+const mockDoc = jest.fn((collectionRef: unknown, id: string) => ({ __fake: "docRef", collectionRef, id }));
+const mockSetDoc = jest.fn();
 const mockGetDocs = jest.fn();
 const mockOrderBy = jest.fn((field: string, direction: string) => ({ __fake: "orderBy", field, direction }));
 const mockQuery = jest.fn((...args: unknown[]) => ({ __fake: "query", args }));
@@ -9,7 +10,8 @@ const mockServerTimestamp = jest.fn(() => ({ __fake: "serverTimestamp" }));
 
 jest.mock("firebase/firestore", () => ({
   collection: (...args: unknown[]) => mockCollection(...args),
-  addDoc: (...args: unknown[]) => mockAddDoc(...args),
+  doc: (...args: unknown[]) => mockDoc(...(args as [unknown, string])),
+  setDoc: (...args: unknown[]) => mockSetDoc(...args),
   getDocs: (...args: unknown[]) => mockGetDocs(...args),
   orderBy: (...args: unknown[]) => mockOrderBy(...(args as [string, string])),
   query: (...args: unknown[]) => mockQuery(...args),
@@ -23,14 +25,24 @@ beforeEach(() => {
 });
 
 describe("addScanHistoryEntry", () => {
-  test("writes to users/{userId}/scanHistory with a server timestamp", async () => {
+  test("writes to users/{userId}/scanHistory, keyed by cropId, with a server timestamp", async () => {
     await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4131" });
 
     expect(mockCollection).toHaveBeenCalledWith({ __fake: "db" }, "users", "user-1", "scanHistory");
-    expect(mockAddDoc).toHaveBeenCalledWith(
-      { __fake: "collectionRef", args: [{ __fake: "db" }, "users", "user-1", "scanHistory"] },
+    expect(mockDoc).toHaveBeenCalledWith({ __fake: "collectionRef", args: [{ __fake: "db" }, "users", "user-1", "scanHistory"] }, "apple");
+    expect(mockSetDoc).toHaveBeenCalledWith(
+      { __fake: "docRef", collectionRef: { __fake: "collectionRef", args: [{ __fake: "db" }, "users", "user-1", "scanHistory"] }, id: "apple" },
       { cropId: "apple", cropName: "Apples", plu: "4131", scannedAt: { __fake: "serverTimestamp" } },
     );
+  });
+
+  test("re-scanning the same crop writes to the same doc rather than a new one, even with a different PLU variant", async () => {
+    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4131" });
+    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4130" });
+
+    expect(mockDoc.mock.calls[0][1]).toBe("apple");
+    expect(mockDoc.mock.calls[1][1]).toBe("apple");
+    expect(mockSetDoc).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, orderBy, query, serverTimestamp, type Timestamp } from "firebase/firestore";
+import { collection, doc, getDocs, orderBy, query, serverTimestamp, setDoc, type Timestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import type { ScanHistoryEntry } from "../types/scanHistory";
 
@@ -6,11 +6,19 @@ function scanHistoryCollection(userId: string) {
   return collection(db, "users", userId, "scanHistory");
 }
 
+/**
+ * Keyed by cropId (not an auto-generated ID), so re-scanning a product you've
+ * already scanned overwrites the same doc — bumping it to the top with a
+ * fresh scannedAt — instead of piling up duplicate rows for the same crop.
+ * A crop can have several PLUs (e.g. different apple varieties' stickers
+ * all mapping to cropId "apple"); those are deliberately treated as the
+ * same product for history purposes.
+ */
 export async function addScanHistoryEntry(
   userId: string,
   entry: { cropId: string; cropName: string; plu: string },
 ): Promise<void> {
-  await addDoc(scanHistoryCollection(userId), { ...entry, scannedAt: serverTimestamp() });
+  await setDoc(doc(scanHistoryCollection(userId), entry.cropId), { ...entry, scannedAt: serverTimestamp() });
 }
 
 /** Most recent scans first. */

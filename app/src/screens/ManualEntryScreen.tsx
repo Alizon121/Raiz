@@ -41,7 +41,7 @@ export default function ManualEntryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: spacing.xl, backgroundColor: colors.cream },
+  container: { flex: 1, justifyContent: "center", padding: spacing.xl, backgroundColor: colors.background },
   title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.sm, textAlign: "center" },
   body: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.xl },
   input: { fontSize: 24, textAlign: "center", letterSpacing: 4 },
