@@ -72,6 +72,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 <Text style={styles.rowMeta}>PLU {item.plu}</Text>
               </View>
               <Text style={styles.rowDate}>{formatDate(item.scannedAt)}</Text>
+              <Text style={styles.rowArrow}> {">"} </Text>
             </TouchableOpacity>
           )}
         />
@@ -82,7 +83,7 @@ export default function HistoryScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 32, backgroundColor: colors.background },
-  title: { ...typography.title, color: colors.forest, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
+  title: { ...typography.title, color: colors.forestDark, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   list: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
   row: {
@@ -100,4 +101,5 @@ const styles = StyleSheet.create({
   rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
   rowMeta: { ...typography.caption, color: colors.textSecondary },
   rowDate: { ...typography.caption, color: colors.textSecondary },
+  rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 }
 });

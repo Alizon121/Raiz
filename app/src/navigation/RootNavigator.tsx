@@ -15,12 +15,15 @@ import ResidueReductionTipsScreen from "../screens/ResidueReductionTipsScreen";
 import ScanConfirmScreen from "../screens/ScanConfirmScreen";
 import ScanScreen from "../screens/ScanScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import PesticideInformationScreen from "../screens/PesticideInformationScreen";
+import AboutScreen from "../screens/AboutScreen";
 import { colors } from "../theme";
-import type { AuthStackParamList, HistoryStackParamList, ScanStackParamList } from "./types";
+import type { AuthStackParamList, HistoryStackParamList, ScanStackParamList, SettingsStackParamList } from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const ScanStack = createNativeStackNavigator<ScanStackParamList>();
 const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
+const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const MainTabs = createBottomTabNavigator();
 
 const detailStackScreenOptions = {
@@ -39,7 +42,12 @@ function ScanNavigator() {
       <ScanStack.Screen
         name="ResidueReductionTips"
         component={ResidueReductionTipsScreen}
-        options={{ title: "Reducing Residue" }}
+        options={{ title: "" }}
+      />
+      <ScanStack.Screen
+        name="PesticideInformation"
+        component={PesticideInformationScreen}
+        options={{ title: "" }}
       />
     </ScanStack.Navigator>
   );
@@ -53,9 +61,23 @@ function HistoryNavigator() {
       <HistoryStack.Screen
         name="ResidueReductionTips"
         component={ResidueReductionTipsScreen}
-        options={{ title: "Reducing Residue" }}
+        options={{ title: "" }}
+      />
+      <HistoryStack.Screen
+        name="PesticideInformation"
+        component={PesticideInformationScreen}
+        options={{ title: "" }}
       />
     </HistoryStack.Navigator>
+  );
+}
+
+function SettingsNavigator() {
+  return (
+    <SettingsStack.Navigator screenOptions={detailStackScreenOptions}>
+      <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+      <SettingsStack.Screen name="About" component={AboutScreen} options={{ title: "" }} />
+    </SettingsStack.Navigator>
   );
 }
 
@@ -80,7 +102,7 @@ function MainNavigator() {
       />
       <MainTabs.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsNavigator}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
       />
     </MainTabs.Navigator>

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { NavigationProp, ParamListBase } from "@react-navigation/native";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
@@ -33,18 +33,6 @@ const SOURCE_LINKS = [
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  return <Text style={styles.sectionLabel}>{children}</Text>;
-}
-
-function SourceCaption({ children }: { children: ReactNode }) {
-  return <Text style={styles.sourceCaption}>{children}</Text>;
-}
-
-function EmptySection({ text }: { text: string }) {
-  return <Text style={styles.emptyText}>{text}</Text>;
 }
 
 export default function ProduceDetailScreen({ route, navigation }: Props) {
@@ -92,7 +80,6 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
     .map((category) => ({ category, count: categoryCounts[category] }))
     .filter(({ count }) => count > 0);
   const nearTolerance = findingsNearTolerance(residueData);
-  const nearToleranceNames = new Set(nearTolerance.map((f) => f.chemical));
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -168,105 +155,17 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
             <Ionicons name="chevron-forward" size={16} color={colors.forest} />
           </TouchableOpacity>
         )}
+
+        {chemicalUse && (
+          <TouchableOpacity
+            style={styles.summaryLinkRow}
+            onPress={() => navigation.navigate("PesticideInformation", { cropName: crop.cropName, chemicalUse, registeredProducts, residueData })}
+          >
+            <Text style={styles.summaryLinkText}>Detailed Pesticide Information</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.forest} />
+          </TouchableOpacity>
+        )}
       </View>
-
-      {/* --- Common pesticide active ingredients (USDA Ag Chemical Use) --- */}
-      <SectionLabel>Common Active Ingredients</SectionLabel>
-      {chemicalUse ? (
-        <>
-          <SourceCaption>
-            USDA NASS Quick Stats · {chemicalUse.sourceYear}
-            {chemicalUse.sourceStates.length > 0 ? ` · ${chemicalUse.sourceStates.join(", ")}` : ""}
-          </SourceCaption>
-          {chemicalUse.dataAgeWarning && (
-            <Text style={styles.warningText}>This data is more than 3 years old — treat it as a rough guide.</Text>
-          )}
-          <View style={styles.card}>
-            {chemicalUse.topActiveIngredients.map((ai) => (
-              <View key={ai.name} style={styles.row}>
-                <View style={styles.rowTextGroup}>
-                  <Text style={styles.rowLabel}>
-                    {ai.name} <Text style={styles.rowMeta}>({ai.category})</Text>
-                  </Text>
-                </View>
-                <Text style={styles.rowValue}>{ai.percentAcresTreated}% of acres</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={styles.footnote}>
-            Based on USDA survey data for domestically grown {crop.cropName.toLowerCase()}. If this item was
-            imported, these figures may not apply.
-          </Text>
-        </>
-      ) : (
-        <EmptySection text="No USDA Ag Chemical Use data available for this crop yet." />
-      )}
-
-      {/* --- Registered products/labels (EPA PPLS) --- */}
-      <SectionLabel>Registered Products</SectionLabel>
-      {registeredProducts && registeredProducts.activeIngredients.length > 0 ? (
-        <>
-          <SourceCaption>EPA Pesticide Product Label System · as of {registeredProducts.sourceDate}</SourceCaption>
-          <Text style={styles.footnote}>
-            "Registered" means legally permitted for use on this crop under EPA rules — it is not a safety judgment.
-          </Text>
-          <View style={styles.card}>
-            {registeredProducts.activeIngredients.map((ai) => (
-              <View key={ai.name} style={styles.row}>
-                <View style={styles.rowTextGroup}>
-                  <Text style={styles.rowLabel}>{ai.name}</Text>
-                  <Text style={styles.rowMeta}>{ai.epaRegistrationStatus}</Text>
-                </View>
-                {ai.labelLinks[0] && (
-                  <TouchableOpacity onPress={() => Linking.openURL(ai.labelLinks[0])}>
-                    <Text style={styles.linkText}>Label</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-          </View>
-        </>
-      ) : (
-        <EmptySection text="No EPA registration data available for this crop yet." />
-      )}
-
-      {/* --- Residue findings vs. legal tolerance (USDA/FDA PDP) --- */}
-      <SectionLabel>Residue Findings</SectionLabel>
-      {residueData && residueData.findings.length > 0 ? (
-        <>
-          <SourceCaption>
-            USDA/FDA Pesticide Data Program · {residueData.sourceYear} · {residueData.sampleSize} samples tested
-          </SourceCaption>
-          <Text style={styles.footnote}>
-            Legal tolerances already include a large built-in safety margin — a detection below tolerance is not a
-            near-miss.
-          </Text>
-          <View style={styles.card}>
-            {residueData.findings.map((f) => {
-              const isNearTolerance = nearToleranceNames.has(f.chemical);
-              return (
-                <View key={f.chemical} style={styles.row}>
-                  <View style={styles.rowTextGroup}>
-                    <Text style={styles.rowLabel}>
-                      {f.chemical}
-                      {isNearTolerance && <Text style={styles.nearToleranceTag}> Near limit</Text>}
-                    </Text>
-                    <Text style={styles.rowMeta}>
-                      {f.percentSamplesDetected}% of samples · median {f.medianConcentration} {f.units}
-                    </Text>
-                  </View>
-                  <Text style={[styles.rowValue, isNearTolerance && styles.rowValueCaution]}>
-                    {f.legalTolerance !== null ? `${f.legalTolerance} ${f.units} limit` : (f.toleranceNote ?? "—")}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-          {residueData.findings.length > 1 && <Text style={styles.footnote}>{residueData.cumulativeExposureNote}</Text>}
-        </>
-      ) : (
-        <EmptySection text="No USDA/FDA residue testing data available for this crop yet." />
-      )}
 
       {/* --- Persistent source/date footer --- */}
       <View style={styles.footer}>
@@ -341,27 +240,6 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   summaryLinkText: { ...typography.body, color: colors.forest, fontWeight: "600" },
-  nearToleranceTag: { ...typography.caption, color: colors.caution, fontWeight: "700" },
-  rowValueCaution: { color: colors.caution },
-  sectionLabel: { ...typography.h2, color: colors.textPrimary, marginTop: spacing.lg, marginBottom: spacing.xs },
-  sourceCaption: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
-  warningText: { ...typography.caption, color: colors.danger, marginBottom: spacing.xs },
-  emptyText: { ...typography.body, color: colors.textSecondary, fontStyle: "italic" },
-  footnote: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.sm },
-  card: { backgroundColor: colors.white, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  rowTextGroup: { flex: 1, paddingRight: spacing.sm },
-  rowLabel: { ...typography.body, color: colors.textPrimary },
-  rowMeta: { ...typography.caption, color: colors.textSecondary },
-  rowValue: { ...typography.caption, color: colors.textPrimary, fontWeight: "600" },
-  linkText: { color: colors.forest, fontWeight: "600" },
   footer: { marginTop: spacing.xl, paddingTop: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   footerText: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.sm },
   footerLink: { ...typography.caption, color: colors.forest, fontWeight: "600", marginBottom: spacing.xs },

@@ -1,37 +1,70 @@
-import { StyleSheet, Text, View } from "react-native";
-import Button from "../components/Button";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { signOut } from "../auth/authService";
 import { useAuth } from "../auth/AuthContext";
 import { resetOnboarding } from "./OnboardingScreen";
+import type { SettingsStackParamList } from "../navigation/types";
 import { colors, spacing, typography } from "../theme";
 
-export default function SettingsScreen() {
+type Props = NativeStackScreenProps<SettingsStackParamList, "Settings">;
+
+interface ActionRow {
+  label: string;
+  onPress: () => void;
+  color?: string;
+}
+
+export default function SettingsScreen({ navigation }: Props) {
   const { user } = useAuth();
+
+  const infoRows = [
+    user?.displayName ? { label: "Name", value: user.displayName } : null,
+    user?.email ? { label: "Email", value: user.email } : null,
+  ].filter((row): row is { label: string; value: string } => row !== null);
+
+  const aboutRow: ActionRow = { label: "About", onPress: () => navigation.navigate("About") };
+  const signOutRow: ActionRow = { label: "Sign out", onPress: () => signOut(), color: colors.danger };
+  // Dev-only: replays onboarding on next sign-out without uninstalling the app. Not shipped in prod builds.
+  const devRow: ActionRow | null = __DEV__
+    ? {
+        label: "Replay onboarding (dev only)",
+        onPress: async () => {
+          await resetOnboarding();
+          await signOut();
+        },
+      }
+    : null;
+  const actionRows = [aboutRow, signOutRow, devRow].filter((row): row is ActionRow => row !== null);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      {user?.email && <Text style={styles.email}>{user.email}</Text>}
-      <Button
-        label="Sign out"
-        variant="outline"
-        onPress={() => signOut()}
-        style={styles.signOutButton}
-        textColor={colors.danger}
-      />
+      <Text style={styles.title}>More</Text>
 
-      {/* Dev-only: replays onboarding on next sign-out without uninstalling the app. Not shipped in prod builds. */}
-      {__DEV__ && (
-        <Button
-          label="Replay onboarding (dev only)"
-          variant="outline"
-          onPress={async () => {
-            await resetOnboarding();
-            await signOut();
-          }}
-          style={styles.devButton}
-        />
-      )}
+      <View style={styles.section}>
+        <Text style={styles.subHeader}>Personal Information</Text>
+        <View style={styles.card}>
+          {infoRows.map((row, i) => (
+            <View key={row.label} style={[styles.row, i === infoRows.length - 1 && styles.rowLast]}>
+              <Text style={styles.infoLabel}>{row.label}</Text>
+              <Text style={styles.infoValue}>{row.value}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.card}>
+          {actionRows.map((action, i) => (
+            <TouchableOpacity
+              key={action.label}
+              onPress={action.onPress}
+              style={[styles.row, i === actionRows.length - 1 && styles.rowLast]}
+            >
+              <Text style={[styles.actionLabel, action.color && { color: action.color }]}>{action.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -39,7 +72,20 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: spacing.xl, backgroundColor: colors.background },
   title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.xl, marginBottom: spacing.md },
-  email: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl },
-  signOutButton: { borderColor: colors.danger },
-  devButton: { marginTop: spacing.md },
+  section: { marginTop: spacing.lg },
+  subHeader: { ...typography.h2, color: colors.textPrimary, marginBottom: spacing.sm },
+  card: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: spacing.md,
+    marginBottom: spacing.md,
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+  },
+  rowLast: { paddingBottom: 0, marginBottom: 0, borderBottomWidth: 0 },
+  infoLabel: { ...typography.body, fontWeight: "500", color: colors.textSecondary },
+  infoValue: { ...typography.body, fontWeight: "600", color: colors.forestDark },
+  actionLabel: { ...typography.body, fontWeight: "600", color: colors.textPrimary },
 });
