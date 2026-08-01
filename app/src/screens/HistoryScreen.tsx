@@ -3,6 +3,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
+import AdBanner from "../components/AdBanner";
 import EmptyState from "../components/EmptyState";
 import type { HistoryStackParamList } from "../navigation/types";
 import { getScanHistory } from "../services/scanHistory";
@@ -77,6 +78,8 @@ export default function HistoryScreen({ navigation }: Props) {
           )}
         />
       )}
+
+      <AdBanner placement="history" />
     </View>
   );
 }

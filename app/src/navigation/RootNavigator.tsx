@@ -17,6 +17,7 @@ import ScanScreen from "../screens/ScanScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import PesticideInformationScreen from "../screens/PesticideInformationScreen";
 import AboutScreen from "../screens/AboutScreen";
+import RemoveAdsScreen from "../screens/RemoveAdsScreen";
 import { colors } from "../theme";
 import type { AuthStackParamList, HistoryStackParamList, ScanStackParamList, SettingsStackParamList } from "./types";
 
@@ -77,6 +78,7 @@ function SettingsNavigator() {
     <SettingsStack.Navigator screenOptions={detailStackScreenOptions}>
       <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
       <SettingsStack.Screen name="About" component={AboutScreen} options={{ title: "" }} />
+      <SettingsStack.Screen name="RemoveAds" component={RemoveAdsScreen} options={{ title: "" }} />
     </SettingsStack.Navigator>
   );
 }

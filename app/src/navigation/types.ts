@@ -37,4 +37,5 @@ export type HistoryStackParamList = {
 export type SettingsStackParamList = {
   Settings: undefined;
   About: undefined;
+  RemoveAds: undefined;
 };

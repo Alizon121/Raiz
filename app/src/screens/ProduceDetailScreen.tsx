@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import AdBanner from "../components/AdBanner";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
 import { getCropById } from "../services/cropLookup";
@@ -167,6 +168,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
         )}
       </View>
 
+      <AdBanner placement="produceDetail" />
       {/* --- Persistent source/date footer --- */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Data current as of {formatDate(crop.lastUpdated)}</Text>
@@ -176,6 +178,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         ))}
       </View>
+
     </ScrollView>
   );
 }

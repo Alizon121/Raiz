@@ -1,3 +1,23 @@
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
+
+// react-native-google-mobile-ads requires a native TurboModule that isn't
+// present under the jest test environment — stub the parts this app uses.
+jest.mock("react-native-google-mobile-ads", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: () => ({ initialize: jest.fn().mockResolvedValue(undefined) }),
+    BannerAd: (props) => React.createElement(View, { testID: "banner-ad", ...props }),
+    BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: "ANCHORED_ADAPTIVE_BANNER" },
+    TestIds: { BANNER: "test-banner-id" },
+    AdsConsent: { gatherConsent: jest.fn().mockResolvedValue(undefined) },
+  };
+});
+
+jest.mock("expo-tracking-transparency", () => ({
+  getTrackingPermissionsAsync: jest.fn().mockResolvedValue({ status: "undetermined" }),
+  requestTrackingPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),
+}));

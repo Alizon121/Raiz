@@ -1,6 +1,8 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { AuthProvider } from "./src/auth/AuthContext";
+import { initAds } from "./src/ads/initAds";
 import RootNavigator from "./src/navigation/RootNavigator";
 
 // webClientId is the "Web client (auto created by Google Service)" OAuth
@@ -11,6 +13,10 @@ GoogleSignin.configure({
 });
 
 export default function App() {
+  useEffect(() => {
+    initAds();
+  }, []);
+
   return (
     <AuthProvider>
       <RootNavigator />
