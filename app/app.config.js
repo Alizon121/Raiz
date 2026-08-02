@@ -68,6 +68,7 @@ module.exports = {
       ],
       "expo-iap",
       "./plugins/withPodModularHeaders",
+      "./plugins/withStoreKitConfig",
     ],
   },
 };

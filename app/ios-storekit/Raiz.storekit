@@ -1,0 +1,96 @@
+{
+  "identifier" : "AA687253-419C-448C-A0BC-D2330BF3422C",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_applicationInternalID" : "",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "CC3943BB-6A6D-4BBA-939A-5B42AE543A01",
+      "localizations" : [],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "0.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "id" : "FA97626E-3D07-41D7-B4A9-1AB9F6606C17",
+          "internalID" : "FA97626E-3D07-41D7-B4A9-1AB9F6606C17",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Removes all ads from Raiz.",
+              "displayName" : "Ad-Free",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "remove_ads_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Remove Ads Monthly",
+          "subscriptionGroupID" : "CC3943BB-6A6D-4BBA-939A-5B42AE543A01",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

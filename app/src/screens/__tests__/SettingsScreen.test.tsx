@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react-native";
+import { Linking } from "react-native";
 import SettingsScreen from "../SettingsScreen";
 import { PremiumProvider } from "../../iap/PremiumContext";
 
@@ -23,6 +24,7 @@ const navigation = { navigate: mockNavigate } as never;
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseAuth.mockReturnValue({ user: { email: "andrew@example.com" } });
+  jest.spyOn(Linking, "openURL").mockResolvedValue(undefined as never);
 });
 afterEach(cleanup);
 
@@ -50,6 +52,14 @@ test("tapping \"About\" navigates to the About screen within the Settings stack"
     fireEvent.press(screen.getByText("About"));
   });
   expect(mockNavigate).toHaveBeenCalledWith("About");
+});
+
+test("tapping \"Privacy Policy\" opens the GitHub-hosted policy doc", async () => {
+  await renderScreen();
+  await act(async () => {
+    fireEvent.press(screen.getByText("Privacy Policy"));
+  });
+  expect(Linking.openURL).toHaveBeenCalledWith("https://github.com/Alizon121/Raiz/blob/main/PRIVACY_POLICY.md");
 });
 
 test("tapping \"Sign out\" signs the user out", async () => {

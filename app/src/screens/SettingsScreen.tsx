@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { signOut } from "../auth/authService";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
@@ -8,6 +8,8 @@ import type { SettingsStackParamList } from "../navigation/types";
 import { colors, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<SettingsStackParamList, "Settings">;
+
+const PRIVACY_POLICY_URL = "https://github.com/Alizon121/Raiz/blob/main/PRIVACY_POLICY.md";
 
 interface ActionRow {
   label: string;
@@ -24,6 +26,7 @@ export default function SettingsScreen({ navigation }: Props) {
   ].filter((row): row is { label: string; value: string } => row !== null);
 
   const aboutRow: ActionRow = { label: "About", onPress: () => navigation.navigate("About") };
+  const privacyPolicyRow: ActionRow = { label: "Privacy Policy", onPress: () => Linking.openURL(PRIVACY_POLICY_URL) };
   const removeAdsRow: ActionRow = { label: "Remove Ads", onPress: () => navigation.navigate("RemoveAds"), color: colors.forest };
   const signOutRow: ActionRow = { label: "Sign out", onPress: () => signOut(), color: colors.danger };
   // Dev-only: replays onboarding on next sign-out without uninstalling the app. Not shipped in prod builds.
@@ -36,7 +39,9 @@ export default function SettingsScreen({ navigation }: Props) {
       },
     }
     : null;
-  const actionRows = [aboutRow, removeAdsRow, signOutRow, devRow].filter((row): row is ActionRow => row !== null);
+  const actionRows = [aboutRow, privacyPolicyRow, removeAdsRow, signOutRow, devRow].filter(
+    (row): row is ActionRow => row !== null,
+  );
 
   return (
     <View style={styles.container}>

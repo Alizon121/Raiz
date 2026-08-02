@@ -77,7 +77,7 @@ test("shows an error state when the lookup fails, with a way back to wherever th
 test("always shows the \"not a lab test of your item\" disclaimer", async () => {
   mockGetCropById.mockResolvedValue(FULL_CROP);
   await renderScreen();
-  expect(screen.getByText(/not a lab test of the specific item you scanned/)).toBeTruthy();
+  expect(screen.getByText(/not a lab test of the specific item you scanned/i)).toBeTruthy();
 });
 
 test("the at-a-glance card links to the Residue Reduction Tips screen, passing the crop's name and tips", async () => {
