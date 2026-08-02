@@ -18,7 +18,6 @@ async function ensureUserDoc(user: User): Promise<void> {
 
   await setDoc(ref, {
     subscriptionStatus: "none",
-    revenueCatAppUserId: null, // populated once RevenueCat is wired up (Phase 5)
     createdAt: serverTimestamp(),
   });
 }

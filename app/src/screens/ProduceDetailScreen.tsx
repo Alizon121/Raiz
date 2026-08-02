@@ -91,7 +91,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
       <View style={styles.disclaimerBox}>
         <Ionicons name="information-circle-outline" size={18} color={colors.forest} />
         <Text style={styles.disclaimerText}>
-          This shows typical, statistical data for {crop.cropName.toLowerCase()} as a crop type — not a lab test of
+          This shows typical, statistical data for {crop.cropName.toLowerCase()} as a crop type, and NOT a lab test of
           the specific item you scanned.
         </Text>
       </View>

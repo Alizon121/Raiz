@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { AuthProvider } from "./src/auth/AuthContext";
 import { initAds } from "./src/ads/initAds";
+import { PremiumProvider } from "./src/iap/PremiumContext";
 import RootNavigator from "./src/navigation/RootNavigator";
 
 // webClientId is the "Web client (auto created by Google Service)" OAuth
@@ -19,8 +20,10 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <RootNavigator />
-      <StatusBar style="auto" />
+      <PremiumProvider>
+        <RootNavigator />
+        <StatusBar style="auto" />
+      </PremiumProvider>
     </AuthProvider>
   );
 }

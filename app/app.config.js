@@ -66,6 +66,8 @@ module.exports = {
             "Raiz uses this to show ads that are more relevant to you. You can decline and still use the app normally.",
         },
       ],
+      "expo-iap",
+      "./plugins/withPodModularHeaders",
     ],
   },
 };

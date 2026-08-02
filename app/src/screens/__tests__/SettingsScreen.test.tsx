@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react-native";
 import SettingsScreen from "../SettingsScreen";
+import { PremiumProvider } from "../../iap/PremiumContext";
 
 const mockSignOut = jest.fn();
 jest.mock("../../auth/authService", () => ({
@@ -27,7 +28,11 @@ afterEach(cleanup);
 
 async function renderScreen() {
   await act(async () => {
-    render(<SettingsScreen navigation={navigation} route={{} as never} />);
+    render(
+      <PremiumProvider>
+        <SettingsScreen navigation={navigation} route={{} as never} />
+      </PremiumProvider>,
+    );
   });
 }
 

@@ -66,7 +66,7 @@ test("creates the users/{uid} doc with the spec's default fields when it doesn't
   expect(mockDoc).toHaveBeenCalledWith({ __fake: "db" }, "users", "user-123");
   expect(mockSetDoc).toHaveBeenCalledWith(
     { __fake: "docRef", collection: "users", id: "user-123" },
-    { subscriptionStatus: "none", revenueCatAppUserId: null, createdAt: "__server_timestamp__" },
+    { subscriptionStatus: "none", createdAt: "__server_timestamp__" },
   );
   expect(screen.getByText("user:user-123")).toBeTruthy();
 });

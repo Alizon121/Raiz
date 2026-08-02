@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react-native";
 import HistoryScreen from "../HistoryScreen";
+import { PremiumProvider } from "../../iap/PremiumContext";
 
 jest.mock("@react-navigation/native", () => ({
   // Runs the focus callback once on mount, which is enough to exercise the
@@ -32,7 +33,11 @@ afterEach(cleanup);
 
 async function renderScreen() {
   await act(async () => {
-    render(<HistoryScreen navigation={navigation} route={{} as never} />);
+    render(
+      <PremiumProvider>
+        <HistoryScreen navigation={navigation} route={{} as never} />
+      </PremiumProvider>,
+    );
   });
 }
 

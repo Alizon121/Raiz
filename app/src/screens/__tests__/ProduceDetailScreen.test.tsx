@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react-native";
 import { Linking } from "react-native";
 import ProduceDetailScreen from "../ProduceDetailScreen";
+import { PremiumProvider } from "../../iap/PremiumContext";
 import type { Crop } from "../../types/crop";
 
 const mockGetCropById = jest.fn();
@@ -48,7 +49,11 @@ afterEach(cleanup);
 
 async function renderScreen(cropId = "apple") {
   await act(async () => {
-    render(<ProduceDetailScreen navigation={navigation} route={{ params: { cropId } } as never} />);
+    render(
+      <PremiumProvider>
+        <ProduceDetailScreen navigation={navigation} route={{ params: { cropId } } as never} />
+      </PremiumProvider>,
+    );
   });
 }
 
