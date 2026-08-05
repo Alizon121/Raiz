@@ -57,6 +57,19 @@ export async function signOut() {
 }
 
 /**
+ * Permanently deletes the signed-in user's account and all their data
+ * (Firestore doc + scanHistory, Firebase Auth record) via the deleteAccount
+ * Cloud Function, then clears the local session. There's no undo — callers
+ * are responsible for confirming with the user first (see
+ * DeleteAccountScreen).
+ */
+export async function deleteAccount() {
+  const callDeleteAccount = httpsCallable(functions, "deleteAccount");
+  await callDeleteAccount();
+  await firebaseSignOut(auth);
+}
+
+/**
  * Native "Sign in with Apple" via expo-apple-authentication, exchanged for
  * a Firebase credential. Requires ios.usesAppleSignIn in app.json and the
  * "Sign In with Apple" capability enabled in your Apple Developer account —

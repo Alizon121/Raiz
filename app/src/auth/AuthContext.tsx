@@ -17,7 +17,6 @@ async function ensureUserDoc(user: User): Promise<void> {
   if (existing.exists()) return;
 
   await setDoc(ref, {
-    subscriptionStatus: "none",
     createdAt: serverTimestamp(),
   });
 }

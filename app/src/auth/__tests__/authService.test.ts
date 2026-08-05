@@ -21,7 +21,10 @@ jest.mock("firebase/auth", () => ({
 }));
 
 const mockGetSignInMethodsCallable = jest.fn();
-const mockHttpsCallable = jest.fn((..._args: unknown[]) => mockGetSignInMethodsCallable);
+const mockDeleteAccountCallable = jest.fn();
+const mockHttpsCallable = jest.fn((..._args: unknown[]) =>
+  _args[1] === "deleteAccount" ? mockDeleteAccountCallable : mockGetSignInMethodsCallable,
+);
 jest.mock("firebase/functions", () => ({
   httpsCallable: (...args: unknown[]) => mockHttpsCallable(...args),
 }));
@@ -48,6 +51,7 @@ jest.mock("@react-native-google-signin/google-signin", () => ({
 }));
 
 import {
+  deleteAccount,
   getLinkedProviderLabel,
   isFirebaseAuthError,
   signInWithApple,
@@ -76,6 +80,25 @@ describe("email/password auth", () => {
   it("signOut calls Firebase's signOut with our auth instance", async () => {
     await signOut();
     expect(mockFirebaseSignOut).toHaveBeenCalledWith({ __fake: "auth" });
+  });
+});
+
+describe("deleteAccount", () => {
+  it("calls the deleteAccount Cloud Function, then signs out locally", async () => {
+    mockDeleteAccountCallable.mockResolvedValue({ data: { success: true } });
+
+    await deleteAccount();
+
+    expect(mockHttpsCallable).toHaveBeenCalledWith({ __fake: "functions" }, "deleteAccount");
+    expect(mockDeleteAccountCallable).toHaveBeenCalledWith();
+    expect(mockFirebaseSignOut).toHaveBeenCalledWith({ __fake: "auth" });
+  });
+
+  it("does not sign out if the Cloud Function call fails", async () => {
+    mockDeleteAccountCallable.mockRejectedValue(new Error("network error"));
+
+    await expect(deleteAccount()).rejects.toThrow("network error");
+    expect(mockFirebaseSignOut).not.toHaveBeenCalled();
   });
 });
 

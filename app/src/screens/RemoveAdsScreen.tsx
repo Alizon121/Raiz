@@ -12,7 +12,7 @@ export default function RemoveAdsScreen() {
       <View style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.title}>Remove Ads</Text>
-          <Text style={styles.body}>You're all set — ads are removed. Thanks for supporting Raiz.</Text>
+          <Text style={styles.body}>You're all set! Ads are removed. Thanks for supporting Raiz!</Text>
         </View>
       </View>
     );

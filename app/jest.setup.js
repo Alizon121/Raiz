@@ -13,7 +13,14 @@ jest.mock("react-native-google-mobile-ads", () => {
     BannerAd: (props) => React.createElement(View, { testID: "banner-ad", ...props }),
     BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: "ANCHORED_ADAPTIVE_BANNER" },
     TestIds: { BANNER: "test-banner-id" },
-    AdsConsent: { gatherConsent: jest.fn().mockResolvedValue(undefined) },
+    AdsConsent: {
+      gatherConsent: jest.fn().mockResolvedValue(undefined),
+      getConsentInfo: jest.fn().mockResolvedValue({ privacyOptionsRequirementStatus: "NOT_REQUIRED" }),
+      showPrivacyOptionsForm: jest.fn().mockResolvedValue(undefined),
+      reset: jest.fn(),
+    },
+    AdsConsentPrivacyOptionsRequirementStatus: { UNKNOWN: "UNKNOWN", REQUIRED: "REQUIRED", NOT_REQUIRED: "NOT_REQUIRED" },
+    AdsConsentDebugGeography: { DISABLED: "DISABLED", EEA: "EEA", REGULATED_US_STATE: "REGULATED_US_STATE", OTHER: "OTHER" },
   };
 });
 

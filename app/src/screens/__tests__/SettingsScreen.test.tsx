@@ -1,7 +1,16 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react-native";
 import { Linking } from "react-native";
+import { AdsConsent } from "react-native-google-mobile-ads";
 import SettingsScreen from "../SettingsScreen";
 import { PremiumProvider } from "../../iap/PremiumContext";
+
+const mockGetConsentInfo = AdsConsent.getConsentInfo as jest.Mock;
+const mockShowPrivacyOptionsForm = AdsConsent.showPrivacyOptionsForm as jest.Mock;
+
+const mockResetConsentForTesting = jest.fn();
+jest.mock("../../ads/initAds", () => ({
+  resetConsentForTesting: (...args: unknown[]) => mockResetConsentForTesting(...args),
+}));
 
 const mockSignOut = jest.fn();
 jest.mock("../../auth/authService", () => ({
@@ -25,6 +34,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockUseAuth.mockReturnValue({ user: { email: "andrew@example.com" } });
   jest.spyOn(Linking, "openURL").mockResolvedValue(undefined as never);
+  mockGetConsentInfo.mockResolvedValue({ privacyOptionsRequirementStatus: "NOT_REQUIRED" });
 });
 afterEach(cleanup);
 
@@ -62,10 +72,41 @@ test("tapping \"Privacy Policy\" opens the GitHub-hosted policy doc", async () =
   expect(Linking.openURL).toHaveBeenCalledWith("https://github.com/Alizon121/Raiz/blob/main/PRIVACY_POLICY.md");
 });
 
+test("hides Ad Privacy Options when the UMP SDK reports it isn't required for this device", async () => {
+  await renderScreen();
+  expect(screen.queryByText("Ad Privacy Options")).toBeNull();
+});
+
+test("shows Ad Privacy Options, and opens the UMP form when tapped, when the UMP SDK reports it's required", async () => {
+  mockGetConsentInfo.mockResolvedValue({ privacyOptionsRequirementStatus: "REQUIRED" });
+  await renderScreen();
+
+  await act(async () => {
+    fireEvent.press(screen.getByText("Ad Privacy Options"));
+  });
+  expect(mockShowPrivacyOptionsForm).toHaveBeenCalledTimes(1);
+});
+
 test("tapping \"Sign out\" signs the user out", async () => {
   await renderScreen();
   await act(async () => {
     fireEvent.press(screen.getByText("Sign out"));
   });
   expect(mockSignOut).toHaveBeenCalledTimes(1);
+});
+
+test("tapping \"Delete Account\" navigates to the DeleteAccount screen within the Settings stack", async () => {
+  await renderScreen();
+  await act(async () => {
+    fireEvent.press(screen.getByText("Delete Account"));
+  });
+  expect(mockNavigate).toHaveBeenCalledWith("DeleteAccount");
+});
+
+test("tapping \"Reset ad consent (dev only)\" clears and re-gathers UMP consent", async () => {
+  await renderScreen();
+  await act(async () => {
+    fireEvent.press(screen.getByText("Reset ad consent (dev only)"));
+  });
+  expect(mockResetConsentForTesting).toHaveBeenCalledTimes(1);
 });

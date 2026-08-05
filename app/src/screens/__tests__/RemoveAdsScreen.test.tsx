@@ -83,7 +83,7 @@ test("a successful purchase finishes the transaction and switches to the ad-free
     await capturedOptions?.onPurchaseSuccess?.({ productId: REMOVE_ADS_SKU } as never);
   });
   expect(mockFinishTransaction).toHaveBeenCalledWith({ purchase: { productId: REMOVE_ADS_SKU }, isConsumable: false });
-  expect(screen.getByText(/ads are removed/)).toBeTruthy();
+  expect(screen.getByText(/ads are removed/i)).toBeTruthy();
 });
 
 test("shows the store's error message when a purchase fails for a reason other than user cancellation", async () => {
@@ -114,6 +114,6 @@ test("tapping Restore purchases re-checks entitlement", async () => {
 test("shows the ad-free thank-you state immediately when the store already reports an active subscription", async () => {
   mockHasActiveSubscriptions.mockResolvedValue(true);
   await renderScreen();
-  expect(screen.getByText(/ads are removed/)).toBeTruthy();
+  expect(screen.getByText(/ads are removed/i)).toBeTruthy();
   expect(screen.queryByText("Subscribe")).toBeNull();
 });

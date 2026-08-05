@@ -15,7 +15,7 @@ GoogleSignin.configure({
 
 export default function App() {
   useEffect(() => {
-    initAds();
+    initAds().catch((error) => console.warn("[ads] initAds failed:", error));
   }, []);
 
   return (

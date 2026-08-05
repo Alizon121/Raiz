@@ -66,12 +66,12 @@ test("creates the users/{uid} doc with the spec's default fields when it doesn't
   expect(mockDoc).toHaveBeenCalledWith({ __fake: "db" }, "users", "user-123");
   expect(mockSetDoc).toHaveBeenCalledWith(
     { __fake: "docRef", collection: "users", id: "user-123" },
-    { subscriptionStatus: "none", createdAt: "__server_timestamp__" },
+    { createdAt: "__server_timestamp__" },
   );
   expect(screen.getByText("user:user-123")).toBeTruthy();
 });
 
-test("does not overwrite an existing users/{uid} doc (e.g. subscriptionStatus) on repeat sign-ins", async () => {
+test("does not overwrite an existing users/{uid} doc on repeat sign-ins", async () => {
   mockGetDoc.mockResolvedValue({ exists: () => true });
   await renderProvider();
 

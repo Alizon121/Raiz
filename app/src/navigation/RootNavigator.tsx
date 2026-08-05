@@ -18,6 +18,7 @@ import SettingsScreen from "../screens/SettingsScreen";
 import PesticideInformationScreen from "../screens/PesticideInformationScreen";
 import AboutScreen from "../screens/AboutScreen";
 import RemoveAdsScreen from "../screens/RemoveAdsScreen";
+import DeleteAccountScreen from "../screens/DeleteAccountScreen";
 import { colors } from "../theme";
 import type { AuthStackParamList, HistoryStackParamList, ScanStackParamList, SettingsStackParamList } from "./types";
 
@@ -79,6 +80,7 @@ function SettingsNavigator() {
       <SettingsStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
       <SettingsStack.Screen name="About" component={AboutScreen} options={{ title: "" }} />
       <SettingsStack.Screen name="RemoveAds" component={RemoveAdsScreen} options={{ title: "" }} />
+      <SettingsStack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: "" }} />
     </SettingsStack.Navigator>
   );
 }
@@ -103,9 +105,9 @@ function MainNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} /> }}
       />
       <MainTabs.Screen
-        name="Settings"
+        name="More"
         component={SettingsNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="menu" size={size} color={color} /> }}
       />
     </MainTabs.Navigator>
   );

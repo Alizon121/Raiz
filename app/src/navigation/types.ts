@@ -38,4 +38,5 @@ export type SettingsStackParamList = {
   Settings: undefined;
   About: undefined;
   RemoveAds: undefined;
+  DeleteAccount: undefined;
 };

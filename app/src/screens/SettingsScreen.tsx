@@ -1,5 +1,8 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useEffect, useState } from "react";
 import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { AdsConsent, AdsConsentPrivacyOptionsRequirementStatus } from "react-native-google-mobile-ads";
+import { resetConsentForTesting } from "../ads/initAds";
 import { signOut } from "../auth/authService";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
@@ -19,6 +22,17 @@ interface ActionRow {
 
 export default function SettingsScreen({ navigation }: Props) {
   const { user } = useAuth();
+  // Google requires GDPR-region users be able to revisit their ad-consent
+  // choice after the fact, not just set it once at first launch — but the
+  // row should only appear where a consent form was actually shown in the
+  // first place (privacyOptionsRequirementStatus tracks that per-device).
+  const [showAdPrivacyOptions, setShowAdPrivacyOptions] = useState(false);
+
+  useEffect(() => {
+    AdsConsent.getConsentInfo().then((info) => {
+      setShowAdPrivacyOptions(info.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED);
+    });
+  }, []);
 
   const infoRows = [
     user?.displayName ? { label: "Name", value: user.displayName } : null,
@@ -27,8 +41,16 @@ export default function SettingsScreen({ navigation }: Props) {
 
   const aboutRow: ActionRow = { label: "About", onPress: () => navigation.navigate("About") };
   const privacyPolicyRow: ActionRow = { label: "Privacy Policy", onPress: () => Linking.openURL(PRIVACY_POLICY_URL) };
+  const adPrivacyOptionsRow: ActionRow | null = showAdPrivacyOptions
+    ? { label: "Ad Privacy Options", onPress: () => AdsConsent.showPrivacyOptionsForm() }
+    : null;
   const removeAdsRow: ActionRow = { label: "Remove Ads", onPress: () => navigation.navigate("RemoveAds"), color: colors.forest };
   const signOutRow: ActionRow = { label: "Sign out", onPress: () => signOut(), color: colors.danger };
+  const deleteAccountRow: ActionRow = {
+    label: "Delete Account",
+    onPress: () => navigation.navigate("DeleteAccount"),
+    color: colors.danger,
+  };
   // Dev-only: replays onboarding on next sign-out without uninstalling the app. Not shipped in prod builds.
   const devRow: ActionRow | null = __DEV__
     ? {
@@ -39,9 +61,22 @@ export default function SettingsScreen({ navigation }: Props) {
       },
     }
     : null;
-  const actionRows = [aboutRow, privacyPolicyRow, removeAdsRow, signOutRow, devRow].filter(
-    (row): row is ActionRow => row !== null,
-  );
+  // Dev-only: consent, once obtained, persists on-device by design and won't
+  // re-prompt on its own — this clears it so the GDPR/US-states form can be
+  // re-tested without erasing the simulator or reinstalling the app.
+  const resetConsentRow: ActionRow | null = __DEV__
+    ? { label: "Reset ad consent (dev only)", onPress: () => resetConsentForTesting() }
+    : null;
+  const actionRows = [
+    aboutRow,
+    privacyPolicyRow,
+    adPrivacyOptionsRow,
+    removeAdsRow,
+    signOutRow,
+    deleteAccountRow,
+    devRow,
+    resetConsentRow,
+  ].filter((row): row is ActionRow => row !== null);
 
   return (
     <View style={styles.container}>
