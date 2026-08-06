@@ -40,6 +40,7 @@ export interface ResidueData {
   sourceYear: number;
   sampleSize: number;
   findings: ResidueFinding[];
+  dataAgeWarning: boolean;
   cumulativeExposureNote: string;
 }
 

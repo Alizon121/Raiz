@@ -27,6 +27,7 @@ const residueData = (findings: ResidueData["findings"]): ResidueData => ({
   sourceYear: 2024,
   sampleSize: 100,
   findings,
+  dataAgeWarning: false,
   cumulativeExposureNote: "note",
 });
 

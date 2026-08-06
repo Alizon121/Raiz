@@ -22,6 +22,7 @@ const RESIDUE_DATA: ResidueData = {
     { chemical: "Pyrimethanil", percentSamplesDetected: 74.1, medianConcentration: 0.715, legalTolerance: 15, toleranceNote: null, units: "ppm" },
     { chemical: "Diazinon", percentSamplesDetected: 5.8, medianConcentration: 0.0067, legalTolerance: 0.5, toleranceNote: null, units: "ppm" },
   ],
+  dataAgeWarning: false,
   cumulativeExposureNote: "Multiple pesticides are frequently detected on the same sample.",
 };
 
@@ -94,6 +95,11 @@ test("tapping a product's label link opens it", async () => {
     fireEvent.press(screen.getByText("Label"));
   });
   expect(Linking.openURL).toHaveBeenCalledWith("https://example.com/label.pdf");
+});
+
+test("shows the stale-data warning on residue findings only when dataAgeWarning is true", async () => {
+  await renderScreen({ residueData: { ...RESIDUE_DATA, dataAgeWarning: true } });
+  expect(screen.getByText(/more than 3 years old/)).toBeTruthy();
 });
 
 test("residue findings show percent detected, median concentration, and tolerance", async () => {

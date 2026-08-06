@@ -35,6 +35,7 @@ const FULL_CROP: Crop = {
       { chemical: "Pyrimethanil", percentSamplesDetected: 74.1, medianConcentration: 0.715, legalTolerance: 15, toleranceNote: null, units: "ppm" },
       { chemical: "Diazinon", percentSamplesDetected: 5.8, medianConcentration: 0.0067, legalTolerance: 0.5, toleranceNote: null, units: "ppm" },
     ],
+    dataAgeWarning: false,
     cumulativeExposureNote: "Multiple pesticides are frequently detected on the same sample.",
   },
   residueReductionTips: ["Rinse under running water."],

@@ -106,6 +106,9 @@ export default function PesticideInformationScreen({ route }: Props) {
                     <SourceCaption>
                         USDA/FDA Pesticide Data Program · {residueData.sourceYear} · {residueData.sampleSize} samples tested
                     </SourceCaption>
+                    {residueData.dataAgeWarning && (
+                        <Text style={styles.warningText}>This data is more than 3 years old — treat it as a rough guide.</Text>
+                    )}
                     <Text style={styles.footnote}>
                         Disclaimer: Legal tolerances already include a large built-in safety margin, and a detection below tolerance should not be alarming
                         .
