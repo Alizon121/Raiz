@@ -1,0 +1,24 @@
+{
+  "name": "produce-pesticide-scanner-etl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone ETL: ingests USDA Ag Chemical Use, EPA PPIS, and USDA/FDA PDP data and writes normalized crop docs to Firestore.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "etl": "tsx src/index.ts",
+    "etl:dry-run": "tsx src/index.ts --dry-run",
+    "test": "node --import tsx --test src/*.test.ts src/**/*.test.ts"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "exceljs": "^4.4.0",
+    "firebase-admin": "^12.7.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

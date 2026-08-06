@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.cache/
+output/
+.env
+*.local
+*firebase-adminsdk*.json
+*serviceAccount*.json
