@@ -1,9 +1,14 @@
 import { act, render, screen } from "@testing-library/react-native";
 import ResidueReductionTipsScreen from "../ResidueReductionTipsScreen";
+import { PremiumProvider } from "../../iap/PremiumContext";
 
 async function renderScreen(cropName: string, tips: string[]) {
   await act(async () => {
-    render(<ResidueReductionTipsScreen route={{ params: { cropName, tips } } as never} />);
+    render(
+      <PremiumProvider>
+        <ResidueReductionTipsScreen route={{ params: { cropName, tips } } as never} />
+      </PremiumProvider>,
+    );
   });
 }
 

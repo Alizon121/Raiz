@@ -80,6 +80,40 @@ export function IllustrationStrawberry({ size = 180 }: { size?: number }) {
   );
 }
 
+export function IllustrationRoot({ size = 180 }: { size?: number }) {
+  return (
+    <Svg viewBox="0 0 200 240" width={size} height={size}>
+      <Ellipse cx={100} cy={222} rx={44} ry={9} fill="rgba(0,0,0,0.07)" />
+      <Path
+        d="M100 95 C120 95 128 110 124 132 C121 148 116 158 112 175 C108 195 106 205 100 218 C94 205 92 195 88 175 C84 158 79 148 76 132 C72 110 80 95 100 95Z"
+        fill="#e8d3ab"
+      />
+      <Path d="M94 100 L90 190" stroke="rgba(255,255,255,0.35)" strokeWidth={4} strokeLinecap="round" />
+      <Path d="M100 105 L96 205" stroke="rgba(120,95,55,0.12)" strokeWidth={2} fill="none" strokeLinecap="round" />
+      <Path d="M78 130 Q66 136 60 148" stroke="#c9ac74" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <Path d="M122 138 Q134 146 138 160" stroke="#c9ac74" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <Path d="M90 175 Q80 184 76 198" stroke="#c9ac74" strokeWidth={2} fill="none" strokeLinecap="round" />
+      <Path d="M110 178 Q120 188 122 202" stroke="#c9ac74" strokeWidth={2} fill="none" strokeLinecap="round" />
+      <Path d="M100 210 Q98 222 100 232" stroke="#c9ac74" strokeWidth={2} fill="none" strokeLinecap="round" />
+      <Path d="M100 97 Q90 65 72 42" stroke="#4a8060" strokeWidth={4.5} fill="none" strokeLinecap="round" />
+      <Path
+        d="M72 42 Q52 38 42 50 Q56 66 76 58 Q80 50 72 42Z"
+        fill="#6aab80"
+      />
+      <Path d="M100 97 Q108 68 122 48" stroke="#4a8060" strokeWidth={4.5} fill="none" strokeLinecap="round" />
+      <Path
+        d="M122 48 Q142 42 154 54 Q140 70 118 64 Q114 54 122 48Z"
+        fill="#7cca88"
+      />
+      <Path d="M100 97 Q100 70 100 45" stroke="#4a8060" strokeWidth={4.5} fill="none" strokeLinecap="round" />
+      <Path
+        d="M100 45 Q92 24 100 8 Q108 24 100 45Z"
+        fill="#8ad494"
+      />
+    </Svg>
+  );
+}
+
 export function IllustrationBroccoli({ size = 180 }: { size?: number }) {
   return (
     <Svg viewBox="0 0 200 240" width={size} height={size}>

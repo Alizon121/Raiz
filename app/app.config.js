@@ -76,7 +76,7 @@ module.exports = {
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     ios: {
-      bundleIdentifier: "com.raiz.app",
+      bundleIdentifier: "com.pesticideraiz.app",
       supportsTablet: true,
       usesAppleSignIn: true,
       googleServicesFile: "./GoogleService-Info.plist",
@@ -84,7 +84,7 @@ module.exports = {
     android: {
       package: "com.raiz.app",
       adaptiveIcon: {
-        backgroundColor: "#E6F4FE",
+        backgroundColor: "#357A42",
         foregroundImage: "./assets/android-icon-foreground.png",
         backgroundImage: "./assets/android-icon-background.png",
         monochromeImage: "./assets/android-icon-monochrome.png",
@@ -127,6 +127,15 @@ module.exports = {
         },
       ],
       "expo-iap",
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/splash-icon.png",
+          imageWidth: 220,
+          resizeMode: "contain",
+          backgroundColor: "#F6F8F5",
+        },
+      ],
       "./plugins/withPodModularHeaders",
       "./plugins/withStoreKitConfig",
     ],

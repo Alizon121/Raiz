@@ -132,6 +132,27 @@ describe("signInWithApple", () => {
     await expect(signInWithApple()).rejects.toThrow("Apple sign-in did not return an identity token.");
     expect(mockSignInWithCredential).not.toHaveBeenCalled();
   });
+
+  it("maps a cancelled Apple authorization to a friendly message", async () => {
+    mockAppleSignInAsync.mockRejectedValue({ code: "ERR_REQUEST_CANCELED", message: "The user canceled the authorization attempt" });
+
+    await expect(signInWithApple()).rejects.toThrow("Apple authentication cancelled.");
+  });
+
+  it("maps an unknown Apple authorization failure (e.g. no Apple ID signed in) to a friendly message", async () => {
+    mockAppleSignInAsync.mockRejectedValue({ code: "ERR_REQUEST_UNKNOWN", message: "The authorization attempt failed for an unknown reason" });
+
+    await expect(signInWithApple()).rejects.toThrow(
+      "Unable to authenticate using an Apple ID. Please ensure you are signed into Apple on your device.",
+    );
+  });
+
+  it("rethrows an unmapped Apple error as-is", async () => {
+    const originalError = { code: "ERR_REQUEST_NOT_HANDLED", message: "The authorization request wasn't handled" };
+    mockAppleSignInAsync.mockRejectedValue(originalError);
+
+    await expect(signInWithApple()).rejects.toBe(originalError);
+  });
 });
 
 describe("signInWithGoogle", () => {

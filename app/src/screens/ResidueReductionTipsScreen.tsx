@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, radii, spacing, typography } from "../theme";
+import AdBanner from "../components/AdBanner";
 
 // Reachable from both the Scan tab and the History tab — see the comment on
 // HistoryStackParamList — so this is typed against just the params it
@@ -23,6 +24,8 @@ export default function ResidueReductionTipsScreen({ route }: Props) {
           </Text>
         ))}
       </View>
+
+      <AdBanner placement="residue" />
     </ScrollView>
   );
 }

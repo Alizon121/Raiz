@@ -5,7 +5,7 @@ import { getBannerAdUnitId } from "../ads/adUnitIds";
 import { useAdsEnabled } from "../ads/useAdsEnabled";
 
 type Props = {
-  placement: "produceDetail" | "history" | "settings" | "removeAds";
+  placement: "produceDetail" | "history" | "settings" | "removeAds" | "residue";
 };
 
 // Renders nothing until the banner actually has a creative to show, so

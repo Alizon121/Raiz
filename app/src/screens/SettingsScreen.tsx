@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   rowLast: { paddingBottom: 0, marginBottom: 0, borderBottomWidth: 0 },
-  infoLabel: { ...typography.body, fontWeight: "500", color: colors.textSecondary },
-  infoValue: { ...typography.body, fontWeight: "600", color: colors.forestDark },
+  infoLabel: { ...typography.body, fontWeight: "500", color: colors.textSecondary, flexShrink: 0, marginRight: spacing.sm },
+  infoValue: { ...typography.body, fontWeight: "600", color: colors.forestDark, flexShrink: 1, textAlign: "right" },
   actionLabel: { ...typography.body, fontWeight: "600", color: colors.textPrimary },
 });

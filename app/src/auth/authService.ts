@@ -69,6 +69,18 @@ export async function deleteAccount() {
   await firebaseSignOut(auth);
 }
 
+// expo-apple-authentication rejects with one of these `.code` values (see
+// its AppleAuthenticationExceptions.swift) rather than a message meant for
+// end users — e.g. ERR_REQUEST_UNKNOWN's default text is "The authorization
+// attempt failed for an unknown reason", which is what you get when the
+// device isn't signed into an Apple ID at all. Mapped codes get a message
+// AuthWelcomeScreen can show directly; anything unmapped falls through with
+// its original message.
+const APPLE_AUTH_ERROR_MESSAGES: Record<string, string> = {
+  ERR_REQUEST_CANCELED: "Apple authentication cancelled.",
+  ERR_REQUEST_UNKNOWN: "Unable to authenticate using an Apple ID. Please ensure you are signed into Apple on your device.",
+};
+
 /**
  * Native "Sign in with Apple" via expo-apple-authentication, exchanged for
  * a Firebase credential. Requires ios.usesAppleSignIn in app.json and the
@@ -83,10 +95,22 @@ export async function signInWithApple() {
   const rawNonce = Crypto.randomUUID();
   const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
 
-  const appleCredential = await AppleAuthentication.signInAsync({
-    requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
-    nonce: hashedNonce,
-  });
+  let appleCredential;
+  try {
+    console.log("[apple-auth] Presenting native Apple sign-in sheet…");
+    appleCredential = await AppleAuthentication.signInAsync({
+      requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      nonce: hashedNonce,
+    });
+    console.log("[apple-auth] signInAsync resolved. Has identityToken:", !!appleCredential.identityToken);
+  } catch (error) {
+    console.log("[apple-auth] signInAsync rejected:", error);
+    const code = typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
+    if (typeof code === "string" && code in APPLE_AUTH_ERROR_MESSAGES) {
+      throw new Error(APPLE_AUTH_ERROR_MESSAGES[code]);
+    }
+    throw error;
+  }
 
   if (!appleCredential.identityToken) {
     throw new Error("Apple sign-in did not return an identity token.");
@@ -98,7 +122,15 @@ export async function signInWithApple() {
     rawNonce,
   });
 
-  return signInWithCredential(auth, credential);
+  console.log("[apple-auth] Exchanging credential with Firebase…");
+  try {
+    const result = await signInWithCredential(auth, credential);
+    console.log("[apple-auth] Firebase sign-in succeeded:", result?.user?.uid);
+    return result;
+  } catch (error) {
+    console.log("[apple-auth] Firebase signInWithCredential rejected:", error);
+    throw error;
+  }
 }
 
 /**

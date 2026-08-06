@@ -69,33 +69,33 @@ export default function ScanScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing="back">
-        <View style={styles.overlay}>
-          <View style={styles.frameHint}>
-            <Text style={styles.frameHintText}>Frame the PLU sticker</Text>
-          </View>
+      <CameraView ref={cameraRef} style={styles.camera} facing="back" />
 
-          {error && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          <View style={styles.controls}>
-            <TouchableOpacity
-              testID="shutter-button"
-              style={[styles.shutter, processing && styles.shutterDisabled]}
-              onPress={capture}
-              disabled={processing}
-            >
-              {processing ? <ActivityIndicator color={colors.white} /> : <View style={styles.shutterInner} />}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={goToManualEntry}>
-              <Text style={styles.manualLinkOnCamera}>Enter manually instead</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={[StyleSheet.absoluteFill, styles.overlay]}>
+        <View style={styles.frameHint}>
+          <Text style={styles.frameHintText}>Frame the PLU sticker</Text>
         </View>
-      </CameraView>
+
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        <View style={styles.controls}>
+          <TouchableOpacity
+            testID="shutter-button"
+            style={[styles.shutter, processing && styles.shutterDisabled]}
+            onPress={capture}
+            disabled={processing}
+          >
+            {processing ? <ActivityIndicator color={colors.white} /> : <View style={styles.shutterInner} />}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={goToManualEntry}>
+            <Text style={styles.manualLinkOnCamera}>Enter manually instead</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   permissionBody: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.lg },
   permissionButton: { marginBottom: spacing.md },
   manualLink: { color: colors.forest, fontWeight: "600" },
-  overlay: { flex: 1, justifyContent: "space-between", padding: spacing.lg },
+  overlay: { justifyContent: "space-between", padding: spacing.lg },
   frameHint: { alignSelf: "center", marginTop: spacing.xxl, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
   frameHintText: { color: colors.white, fontWeight: "600" },
   errorBanner: { backgroundColor: "rgba(176,0,32,0.9)", borderRadius: radii.md, padding: spacing.sm, marginBottom: spacing.md },
