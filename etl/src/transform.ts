@@ -1,5 +1,5 @@
 import { buildRegisteredProducts, loadEpaProductsBySite } from "./sources/epa.js";
-import { buildResidueData, loadPdpDataset } from "./sources/pdp.js";
+import { buildResidueData } from "./sources/pdp.js";
 import { buildChemicalUse } from "./sources/quickstats.js";
 import type { CropDoc, CropSourceMapping } from "./types.js";
 
@@ -50,6 +50,36 @@ const RESIDUE_REDUCTION_TIPS_BY_CROP: Record<string, string[]> = {
     "Gently rub each tomato while rinsing; a quick dip doesn't remove as much surface residue as running water with light agitation.",
     "Wash right before eating rather than before storing — added moisture in storage can speed spoilage.",
   ],
+  "lettuce-leaf": [
+    "Separate the leaves and rinse each one individually under running water — unlike a head, loose leaves have no outer layer to discard first.",
+    "Soak briefly in a bowl of cold water, swishing gently, then rinse again under running water — this dislodges grit as well as surface residue.",
+    "Dry thoroughly with a salad spinner or clean towel after washing; lingering moisture on leaf lettuce promotes wilting and bacterial growth fast.",
+  ],
+  blackberry: [
+    "Rinse gently under running water just before eating — blackberries are soft and bruise easily, so avoid rubbing or soaking them.",
+    "Use a colander so water reaches all sides of the berries without you having to handle them roughly.",
+    "Wash right before eating, not before storing — added moisture significantly shortens how long fresh blackberries keep.",
+  ],
+  tomatillo: [
+    "Remove the papery husk first — it's inedible and typically carries more residue than the fruit inside.",
+    "The fruit itself is often sticky underneath the husk; rinse and rub gently under running water to remove that residue along with the surface film.",
+    "Wash just before cooking or cutting, since a knife through an unwashed tomatillo can drag residue from the surface into the flesh.",
+  ],
+  pineapple: [
+    "Scrub the outside under running water with a produce brush before cutting — a knife through an unwashed rind can carry surface residue into the fruit.",
+    "The edible flesh is well protected by the thick, inedible rind, so residue reduction here matters most for the wash-before-cutting step, not the fruit itself.",
+    "Wash your cutting board and knife afterward, since cutting through the rind can transfer residue onto them.",
+  ],
+  "sweet-corn": [
+    "Remove the husk and silk before eating — nearly all residue stays on the outer husk, which isn't eaten.",
+    "Rinse the ear briefly under running water after husking, especially if any silk strands remain.",
+    "Husking right before cooking, rather than washing husked corn ahead of time and storing it, keeps the kernels from drying out.",
+  ],
+  almond: [
+    "Almonds are sold shelled and dried, not washed like fresh produce — residue reduction here mainly comes down to the hull and shell being removed before you buy them.",
+    "Rinsing raw almonds briefly under water before eating or using them in a recipe can remove any surface dust, though it won't affect residue absorbed during growing.",
+    "Roasting has not been shown to meaningfully reduce pesticide residue on nuts — treat washing as the only practical at-home step.",
+  ],
 };
 
 const DEFAULT_RESIDUE_REDUCTION_TIPS = [
@@ -66,18 +96,18 @@ export async function buildAllCropDocs(
   crops: CropSourceMapping[],
   nassApiKey: string | undefined,
 ): Promise<Record<string, CropDoc>> {
-  const [productsBySite, pdpDataset] = await Promise.all([loadEpaProductsBySite(), loadPdpDataset()]);
+  const productsBySite = await loadEpaProductsBySite();
 
   const docs: Record<string, CropDoc> = {};
 
   for (const crop of crops) {
     console.log(`Building crop doc: ${crop.cropId}`);
 
-    const [chemicalUse, registeredProducts] = await Promise.all([
+    const [chemicalUse, registeredProducts, residueData] = await Promise.all([
       buildChemicalUse(crop, nassApiKey),
       buildRegisteredProducts(crop, productsBySite),
+      buildResidueData(crop),
     ]);
-    const residueData = buildResidueData(crop, pdpDataset);
 
     docs[crop.cropId] = {
       cropName: crop.cropName,

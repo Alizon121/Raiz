@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildResidueData } from "./pdp.js";
+import { buildResidueData, buildResidueDataForYear, PDP_LATEST_YEAR, PDP_MAX_FALLBACK_YEARS } from "./pdp.js";
 import type { CropSourceMapping } from "../types.js";
+import type { PdpDataset } from "./pdp.js";
 
 const apple: CropSourceMapping = {
   cropId: "apple",
@@ -44,8 +45,8 @@ function makeDataset() {
   };
 }
 
-test("buildResidueData: computes percent detected and median only from actual detects", () => {
-  const result = buildResidueData(apple, makeDataset());
+test("buildResidueDataForYear: computes percent detected and median only from actual detects", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2024);
   assert.ok(result);
   assert.equal(result.sampleSize, 4);
 
@@ -58,15 +59,15 @@ test("buildResidueData: computes percent detected and median only from actual de
   assert.equal(pest001.units, "ppm");
 });
 
-test("buildResidueData: a 0 concentration counts as non-detect, not a detect", () => {
-  const result = buildResidueData(apple, makeDataset());
+test("buildResidueDataForYear: a 0 concentration counts as non-detect, not a detect", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2024);
   const pest001 = result!.findings.find((f) => f.chemical === "Pyrimethanil")!;
   // If the 0-concen row were miscounted as a detect this would be 75%, not 50%.
   assert.equal(pest001.percentSamplesDetected, 50);
 });
 
-test("buildResidueData: missing tolerance entry surfaces as null + explanatory note, not a crash", () => {
-  const result = buildResidueData(apple, makeDataset());
+test("buildResidueDataForYear: missing tolerance entry surfaces as null + explanatory note, not a crash", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2024);
   const pest002 = result!.findings.find((f) => f.chemical === "Some Unmapped Pesticide");
   assert.ok(pest002);
   assert.equal(pest002.legalTolerance, null);
@@ -74,42 +75,91 @@ test("buildResidueData: missing tolerance entry surfaces as null + explanatory n
   assert.equal(pest002.units, "ppb");
 });
 
-test("buildResidueData: results/samples from a different crop never leak into findings", () => {
-  const result = buildResidueData(apple, makeDataset());
+test("buildResidueDataForYear: results/samples from a different crop never leak into findings", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2024);
   assert.equal(
     result!.findings.some((f) => f.chemical.includes("003") || f.chemical === "003"),
     false,
   );
 });
 
-test("buildResidueData: findings are sorted by percentSamplesDetected descending", () => {
-  const result = buildResidueData(apple, makeDataset());
+test("buildResidueDataForYear: findings are sorted by percentSamplesDetected descending", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2024);
   const percentages = result!.findings.map((f) => f.percentSamplesDetected);
   const sorted = [...percentages].sort((a, b) => b - a);
   assert.deepEqual(percentages, sorted);
 });
 
-test("buildResidueData: pesticides with zero detections across all samples are omitted entirely", () => {
+test("buildResidueDataForYear: pesticides with zero detections across all samples are omitted entirely", () => {
   const dataset = makeDataset();
   dataset.results.push({ samplePk: "2", commod: "AP", pestCode: "004", concen: null, conUnit: "M" });
   dataset.pestNameByCode.set("004", "Never Detected Pesticide");
-  const result = buildResidueData(apple, dataset);
+  const result = buildResidueDataForYear(apple, dataset, 2024);
   assert.equal(result!.findings.some((f) => f.chemical === "Never Detected Pesticide"), false);
 });
 
-test("buildResidueData: returns null when the crop has no samples in this year's PDP data", () => {
+test("buildResidueDataForYear: returns null when the crop has no samples in this year's PDP data", () => {
   const dataset = makeDataset();
   const uncoveredCrop: CropSourceMapping = { ...apple, pdpCommodityCodes: ["ZZ"] };
-  const result = buildResidueData(uncoveredCrop, dataset);
+  const result = buildResidueDataForYear(uncoveredCrop, dataset, 2024);
   assert.equal(result, null);
 });
 
-test("buildResidueData: median of an even-length set averages the two middle values", () => {
+test("buildResidueDataForYear: median of an even-length set averages the two middle values", () => {
   const dataset = makeDataset();
   // pest 001 currently has detects [0.02, 0.04] -> median 0.03, already covered above.
   // Add a third detect to make it odd-length and confirm the middle value is picked directly.
   dataset.results.push({ samplePk: "3", commod: "AP", pestCode: "001", concen: 0.09, conUnit: "M" });
-  const result = buildResidueData(apple, dataset);
+  const result = buildResidueDataForYear(apple, dataset, 2024);
   const pest001 = result!.findings.find((f) => f.chemical === "Pyrimethanil")!;
   assert.equal(pest001.medianConcentration, 0.04); // sorted [0.02, 0.04, 0.09] -> middle is 0.04
+});
+
+test("buildResidueDataForYear: dataAgeWarning is false for data within the 3-year threshold, true beyond it", () => {
+  const recentYear = new Date().getFullYear() - 2;
+  const staleYear = new Date().getFullYear() - 4;
+  assert.equal(buildResidueDataForYear(apple, makeDataset(), recentYear)!.dataAgeWarning, false);
+  assert.equal(buildResidueDataForYear(apple, makeDataset(), staleYear)!.dataAgeWarning, true);
+});
+
+test("buildResidueDataForYear: sourceYear reflects whichever year was actually passed in", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2019);
+  assert.equal(result!.sourceYear, 2019);
+});
+
+// --- buildResidueData: multi-year fallback orchestrator ---
+// loadYear is injected instead of hitting the real network/zip downloads —
+// see the PdpDataset fixture pattern above.
+
+const emptyDataset: PdpDataset = { samples: [], results: [], toleranceByKey: new Map(), pestNameByCode: new Map() };
+
+test("buildResidueData: uses PDP_LATEST_YEAR directly when that year has the crop's data", async () => {
+  const attemptedYears: number[] = [];
+  const result = await buildResidueData(apple, async (year) => {
+    attemptedYears.push(year);
+    return makeDataset(); // has apple ("AP") data at every year queried
+  });
+  assert.deepEqual(attemptedYears, [PDP_LATEST_YEAR]);
+  assert.equal(result!.sourceYear, PDP_LATEST_YEAR);
+});
+
+test("buildResidueData: falls back to older years in order until one has the crop's data", async () => {
+  const attemptedYears: number[] = [];
+  const yearWithData = PDP_LATEST_YEAR - 2;
+  const result = await buildResidueData(apple, async (year) => {
+    attemptedYears.push(year);
+    return year === yearWithData ? makeDataset() : emptyDataset;
+  });
+  assert.deepEqual(attemptedYears, [PDP_LATEST_YEAR, PDP_LATEST_YEAR - 1, PDP_LATEST_YEAR - 2]);
+  assert.equal(result!.sourceYear, yearWithData);
+});
+
+test("buildResidueData: gives up and returns null after PDP_MAX_FALLBACK_YEARS with no data", async () => {
+  const attemptedYears: number[] = [];
+  const result = await buildResidueData(apple, async (year) => {
+    attemptedYears.push(year);
+    return emptyDataset;
+  });
+  assert.equal(result, null);
+  assert.equal(attemptedYears.length, PDP_MAX_FALLBACK_YEARS);
 });

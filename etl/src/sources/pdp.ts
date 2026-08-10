@@ -4,12 +4,22 @@ import { downloadCached } from "../download.js";
 import type { CropSourceMapping, ResidueData, ResidueFinding } from "../types.js";
 
 // PDP publishes one annual zip per year at a fixed naming convention.
-// Not every commodity is tested every year (PDP rotates commodities), so
-// callers should be prepared for `null` residueData on crops not covered
-// by PDP_YEAR. See README for how to add a multi-year fallback.
-export const PDP_YEAR = 2024;
-const PDP_YEAR_SHORT = String(PDP_YEAR).slice(2);
-const PDP_ZIP_URL = `https://www.ams.usda.gov/sites/default/files/media/${PDP_YEAR}PDPDatabase.zip`;
+// Not every commodity is tested every year (PDP rotates commodities) — 2024
+// alone tested only 19 of them — so a single-year lookup misses most crops
+// entirely. buildResidueData walks backward from PDP_LATEST_YEAR until it
+// finds a year that actually tested the crop, capped at PDP_MAX_FALLBACK_YEARS
+// so one never-tested crop can't trigger an unbounded string of downloads.
+// URL pattern verified live back through 2019.
+export const PDP_LATEST_YEAR = 2024;
+export const PDP_MAX_FALLBACK_YEARS = 5;
+// Matches quickstats.ts's own DATA_AGE_WARNING_YEARS threshold — kept as a
+// separate constant since the two sources are independent modules, but the
+// policy (3 years) is deliberately the same across both.
+const PDP_DATA_AGE_WARNING_YEARS = 3;
+
+function pdpZipUrl(year: number): string {
+  return `https://www.ams.usda.gov/sites/default/files/media/${year}PDPDatabase.zip`;
+}
 
 interface SampleRow {
   samplePk: string;
@@ -30,7 +40,7 @@ interface ToleranceEntry {
   note: string | null;
 }
 
-interface PdpDataset {
+export interface PdpDataset {
   samples: SampleRow[];
   results: ResultRow[];
   toleranceByKey: Map<string, ToleranceEntry>; // key = `${pestCode}|${commod}`
@@ -39,8 +49,8 @@ interface PdpDataset {
 
 const CONUNIT_TO_LABEL: Record<string, string> = { M: "ppm", B: "ppb", T: "ppt" };
 
-async function loadZip(): Promise<AdmZip> {
-  const buf = await downloadCached(PDP_ZIP_URL, `${PDP_YEAR}PDPDatabase.zip`);
+async function loadZip(year: number): Promise<AdmZip> {
+  const buf = await downloadCached(pdpZipUrl(year), `${year}PDPDatabase.zip`);
   return new AdmZip(buf);
 }
 
@@ -113,14 +123,20 @@ async function parseReferenceTables(zip: AdmZip): Promise<{
   return { toleranceByKey, pestNameByCode };
 }
 
-let cachedDataset: Promise<PdpDataset> | null = null;
+const datasetCacheByYear = new Map<number, Promise<PdpDataset>>();
 
-/** Downloads + parses the annual PDP zip once; shared across all crops. */
-export async function loadPdpDataset(): Promise<PdpDataset> {
-  if (!cachedDataset) {
-    cachedDataset = (async () => {
-      console.log(`USDA PDP: loading ${PDP_YEAR} annual database...`);
-      const zip = await loadZip();
+/**
+ * Downloads + parses one year's annual PDP zip, once per year — shared
+ * across all crops that end up trying that year (either as PDP_LATEST_YEAR
+ * or as a fallback), so e.g. two crops both falling back to 2022 only
+ * download that zip a single time.
+ */
+export async function loadPdpDatasetForYear(year: number): Promise<PdpDataset> {
+  let cached = datasetCacheByYear.get(year);
+  if (!cached) {
+    cached = (async () => {
+      console.log(`USDA PDP: loading ${year} annual database...`);
+      const zip = await loadZip(year);
       const samplesEntry = zip.getEntries().find((e) => /Samples\.txt$/i.test(e.entryName));
       const resultsEntry = zip.getEntries().find((e) => /Results\.txt$/i.test(e.entryName));
       if (!samplesEntry || !resultsEntry) {
@@ -131,8 +147,9 @@ export async function loadPdpDataset(): Promise<PdpDataset> {
       const { toleranceByKey, pestNameByCode } = await parseReferenceTables(zip);
       return { samples, results, toleranceByKey, pestNameByCode };
     })();
+    datasetCacheByYear.set(year, cached);
   }
-  return cachedDataset;
+  return cached;
 }
 
 function median(values: number[]): number {
@@ -141,7 +158,12 @@ function median(values: number[]): number {
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-export function buildResidueData(crop: CropSourceMapping, dataset: PdpDataset): ResidueData | null {
+/**
+ * Pure, single-year build — kept separate from the multi-year fallback
+ * orchestrator (below) so it stays simple to unit test with a hand-built
+ * fixture dataset, no network involved.
+ */
+export function buildResidueDataForYear(crop: CropSourceMapping, dataset: PdpDataset, year: number): ResidueData | null {
   const commodSet = new Set(crop.pdpCommodityCodes);
   const samplePks = new Set(dataset.samples.filter((s) => commodSet.has(s.commod)).map((s) => s.samplePk));
   if (samplePks.size === 0) return null;
@@ -176,12 +198,36 @@ export function buildResidueData(crop: CropSourceMapping, dataset: PdpDataset): 
   findings.sort((a, b) => b.percentSamplesDetected - a.percentSamplesDetected);
 
   return {
-    sourceYear: PDP_YEAR,
+    sourceYear: year,
     sampleSize: samplePks.size,
     findings,
+    dataAgeWarning: new Date().getFullYear() - year > PDP_DATA_AGE_WARNING_YEARS,
     cumulativeExposureNote:
       "Multiple pesticides are frequently detected on the same sample. PDP and EPA tolerances are set " +
       "per individual chemical; combined/cumulative exposure across multiple residues on one item is not " +
       "well characterized by this data and is not represented here.",
   };
+}
+
+/**
+ * Walks backward from PDP_LATEST_YEAR, trying each year's dataset in turn,
+ * until one actually tested this crop (has sample data for its commodity
+ * codes) or PDP_MAX_FALLBACK_YEARS is exhausted. Returns null only if the
+ * crop wasn't tested in any of those years — same "no data yet" meaning as
+ * before, just checked across more years instead of one.
+ *
+ * `loadYear` defaults to the real network-backed loader; tests inject a
+ * fixture-returning stub instead of mocking zip downloads.
+ */
+export async function buildResidueData(
+  crop: CropSourceMapping,
+  loadYear: (year: number) => Promise<PdpDataset> = loadPdpDatasetForYear,
+): Promise<ResidueData | null> {
+  for (let i = 0; i < PDP_MAX_FALLBACK_YEARS; i++) {
+    const year = PDP_LATEST_YEAR - i;
+    const dataset = await loadYear(year);
+    const result = buildResidueDataForYear(crop, dataset, year);
+    if (result) return result;
+  }
+  return null;
 }

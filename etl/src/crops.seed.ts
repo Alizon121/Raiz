@@ -94,4 +94,90 @@ export const CROP_SEED: CropSourceMapping[] = [
     epaSiteCodes: ["110050106"],
     pdpCommodityCodes: ["CT"],
   },
+
+  // --- Batch 2: added once buildResidueData gained a multi-year PDP
+  // fallback (PDP_LATEST_YEAR only tested 19 commodities in 2024; most of
+  // these needed that to be viable at all). epaSiteCodes/pdpCommodityCodes/
+  // quickStatsCommodity verified the same way as batch 1, against live
+  // sitename.zip/prodsite.zip/PDP-2024/NASS Quick Stats.
+  //
+  // PLU codes were the one field NOT independently verified against a live
+  // source when this batch was written — IFPS's own PLU lookup is a JS
+  // search UI with no fetchable static listing. User spot-check caught two
+  // wrong guesses (blackberry, tomatillo), now corrected below. Almond's
+  // PLU is still an unconfirmed placeholder — see its entry.
+  {
+    cropId: "lettuce-leaf",
+    cropName: "Leaf Lettuce",
+    plu: ["4562", "4564"],
+    commonAliases: ["leaf lettuce", "green leaf lettuce", "red leaf lettuce"],
+    // Same NASS commodity as lettuce-head — Ag Chemical Use doesn't split
+    // leaf vs. head, so both crops' chemicalUse will show identical figures.
+    quickStatsCommodity: "LETTUCE",
+    epaSiteCodes: ["130310106"],
+    pdpCommodityCodes: ["LL"],
+  },
+  {
+    cropId: "blackberry",
+    cropName: "Blackberries",
+    plu: ["4239"], // user-verified; 4232 (my initial guess) was wrong
+    commonAliases: ["blackberry", "blackberries"],
+    // NASS's most recent Ag Chemical Use survey year for blackberries is
+    // 2017 — expect dataAgeWarning: true on this crop's chemicalUse; that's
+    // correct/expected, not a bug in the pipeline.
+    quickStatsCommodity: "BLACKBERRIES",
+    epaSiteCodes: ["010020106"],
+    pdpCommodityCodes: ["BK"],
+  },
+  {
+    cropId: "tomatillo",
+    cropName: "Tomatillos",
+    plu: ["4801"], // user-verified; 4728 (my initial guess) was wrong
+    commonAliases: ["tomatillo", "tomatillos", "husk tomato"],
+    // Verified live: NASS Quick Stats has no Ag Chemical Use survey data for
+    // tomatillos at all (HTTP 400 — not a recognized commodity_desc for
+    // that dataset). chemicalUse will always be null for this crop; that's
+    // a real gap in USDA's own data, not something buildChemicalUse can fix.
+    quickStatsCommodity: "TOMATILLOS",
+    epaSiteCodes: ["110080101"],
+    pdpCommodityCodes: ["TT"],
+  },
+  {
+    cropId: "pineapple",
+    cropName: "Pineapple",
+    plu: ["4430"],
+    commonAliases: ["pineapple", "pineapples"],
+    // Same situation as tomatillo — verified live, NASS has no Ag Chemical
+    // Use data for pineapple; chemicalUse will always be null.
+    quickStatsCommodity: "PINEAPPLES",
+    epaSiteCodes: ["060130106"],
+    pdpCommodityCodes: ["PN"],
+  },
+  {
+    cropId: "sweet-corn",
+    cropName: "Sweet Corn",
+    plu: ["4077"],
+    commonAliases: ["sweet corn", "corn", "corn on the cob"],
+    // NASS distinguishes "CORN" (field/grain corn) from "SWEET CORN" — the
+    // plain "CORN" query returns mostly irrelevant field-corn data, and
+    // EPA's site vocabulary has the same split (see epaSiteCodes).
+    quickStatsCommodity: "SWEET CORN",
+    epaSiteCodes: ["150050106"],
+    pdpCommodityCodes: ["CB"],
+  },
+  {
+    cropId: "almond",
+    cropName: "Almonds",
+    // PLU still needs confirmation (see below) — 4030 is a placeholder, not
+    // independently verified like the other three fields on this crop.
+    plu: ["4924"],
+    commonAliases: ["almond", "almonds"],
+    quickStatsCommodity: "ALMONDS",
+    epaSiteCodes: ["030010106"],
+    // Verified live against Pdp24Samples.txt + the 2024 PDP Data Dictionary:
+    // every "AL" sample has COMMTYPE=FR ("Fresh") — PDP tests raw/unroasted
+    // almonds, not sliced, roasted, or almond butter. Use whichever PLU
+    // represents raw whole/shelled almonds specifically.
+    pdpCommodityCodes: ["AL"],
+  },
 ];
