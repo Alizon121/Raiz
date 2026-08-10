@@ -71,6 +71,9 @@ describe("lookupCropByPlu", () => {
       registeredProducts: null,
       residueData: null,
       residueReductionTips: ["Rinse under running water."],
+      // RAW_APPLE_DOC has no imageUrl field, exercising the ?? null fallback
+      // for docs written before the field existed.
+      imageUrl: null,
       lastUpdated: new Date("2026-01-15T00:00:00Z"),
     });
   });

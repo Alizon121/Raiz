@@ -16,7 +16,7 @@ function scanHistoryCollection(userId: string) {
  */
 export async function addScanHistoryEntry(
   userId: string,
-  entry: { cropId: string; cropName: string; plu: string },
+  entry: { cropId: string; cropName: string; plu: string; imageUrl: string | null },
 ): Promise<void> {
   await setDoc(doc(scanHistoryCollection(userId), entry.cropId), { ...entry, scannedAt: serverTimestamp() });
 }
@@ -26,12 +26,20 @@ export async function getScanHistory(userId: string): Promise<ScanHistoryEntry[]
   const q = query(scanHistoryCollection(userId), orderBy("scannedAt", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((docSnap) => {
-    const data = docSnap.data() as { cropId: string; cropName: string; plu: string; scannedAt: Timestamp | null };
+    const data = docSnap.data() as {
+      cropId: string;
+      cropName: string;
+      plu: string;
+      imageUrl: string | null | undefined;
+      scannedAt: Timestamp | null;
+    };
     return {
       id: docSnap.id,
       cropId: data.cropId,
       cropName: data.cropName,
       plu: data.plu,
+      // undefined for entries written before this field existed.
+      imageUrl: data.imageUrl ?? null,
       // scannedAt can briefly be null: serverTimestamp() resolves once the
       // write reaches the server, so a doc read back immediately after being
       // written offline may not have it yet.

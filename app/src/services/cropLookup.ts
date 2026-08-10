@@ -14,6 +14,7 @@ function toCrop(cropId: string, data: Record<string, unknown>): Crop {
     registeredProducts: raw.registeredProducts,
     residueData: raw.residueData,
     residueReductionTips: raw.residueReductionTips,
+    imageUrl: raw.imageUrl ?? null,
     lastUpdated: raw.lastUpdated.toDate(),
   };
 }

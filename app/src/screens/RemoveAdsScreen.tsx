@@ -1,6 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AdBanner from "../components/AdBanner";
 import Button from "../components/Button";
+import ScreenBackground from "../components/ScreenBackground";
 import { usePremium } from "../iap/PremiumContext";
 import { colors, radii, spacing, typography } from "../theme";
 
@@ -9,17 +10,17 @@ export default function RemoveAdsScreen() {
 
   if (isPremium) {
     return (
-      <View style={styles.container}>
+      <ScreenBackground style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.title}>Remove Ads</Text>
           <Text style={styles.body}>You're all set! Ads are removed. Thanks for supporting Raiz!</Text>
         </View>
-      </View>
+      </ScreenBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Remove Ads</Text>
         <Text style={styles.body}>
@@ -47,14 +48,14 @@ export default function RemoveAdsScreen() {
       </View>
 
       <AdBanner placement="removeAds" />
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { flex: 1, padding: spacing.xl },
-  title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.xl, marginBottom: spacing.md },
+  title: { ...typography.h1, color: colors.textOnDark, marginTop: spacing.xl, marginBottom: spacing.md },
   body: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl },
   card: {
     backgroundColor: colors.white,

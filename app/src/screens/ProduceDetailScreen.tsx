@@ -5,6 +5,7 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpac
 import AdBanner from "../components/AdBanner";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
+import ScreenBackground from "../components/ScreenBackground";
 import { getCropById } from "../services/cropLookup";
 import { countActiveIngredientsByCategory, findingsNearTolerance, percentOfTolerance } from "../utils/chemicalProfile";
 import type { ActiveIngredientUse, Crop } from "../types/crop";
@@ -54,24 +55,26 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
 
   if (crop === "loading") {
     return (
-      <View style={styles.center}>
+      <ScreenBackground style={styles.center}>
         <ActivityIndicator color={colors.forest} />
-      </View>
+      </ScreenBackground>
     );
   }
 
   if (crop === "error" || crop === null) {
     return (
-      <EmptyState
-        title={crop === null ? "Not found" : "Something went wrong"}
-        body={
-          crop === null
-            ? "This item no longer has data available."
-            : "We couldn't load this item right now. Check your connection and try again."
-        }
-      >
-        <Button label="Go back" onPress={() => navigation.goBack()} style={styles.backButton} />
-      </EmptyState>
+      <ScreenBackground>
+        <EmptyState
+          title={crop === null ? "Not found" : "Something went wrong"}
+          body={
+            crop === null
+              ? "This item no longer has data available."
+              : "We couldn't load this item right now. Check your connection and try again."
+          }
+        >
+          <Button label="Go back" onPress={() => navigation.goBack()} style={styles.backButton} />
+        </EmptyState>
+      </ScreenBackground>
     );
   }
 
@@ -83,6 +86,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
   const nearTolerance = findingsNearTolerance(residueData);
 
   return (
+    <ScreenBackground>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.cropName}>{crop.cropName}</Text>
 
@@ -180,15 +184,16 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
       </View>
 
     </ScrollView>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   backButton: { alignSelf: "stretch" },
-  cropName: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.md },
+  cropName: { ...typography.title, color: colors.textOnDark, marginBottom: spacing.md },
   disclaimerBox: {
     flexDirection: "row",
     gap: spacing.sm,

@@ -117,6 +117,7 @@ export async function buildAllCropDocs(
       registeredProducts,
       residueData,
       residueReductionTips: getResidueReductionTips(crop.cropId),
+      imageUrl: crop.imageUrl ?? null,
       lastUpdated: new Date().toISOString(),
     };
   }

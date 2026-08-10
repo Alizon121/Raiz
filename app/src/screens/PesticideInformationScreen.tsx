@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import ScreenBackground from "../components/ScreenBackground";
 import { findingsNearTolerance } from "../utils/chemicalProfile";
 import type { ChemicalUse, RegisteredProducts, ResidueData } from "../types/crop";
 import { colors, radii, spacing, typography } from "../theme";
@@ -36,6 +37,7 @@ export default function PesticideInformationScreen({ route }: Props) {
     const nearToleranceNames = new Set(nearTolerance.map((f) => f.chemical));
 
     return (
+        <ScreenBackground>
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Text style={styles.title}>Pesticide Information for {cropName}</Text>
 
@@ -140,13 +142,14 @@ export default function PesticideInformationScreen({ route }: Props) {
                 <EmptySection text="No USDA/FDA residue testing data available for this crop yet." />
             )}
         </ScrollView>
+        </ScreenBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1 },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-    title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.md },
+    title: { ...typography.h1, color: colors.textOnDark, marginBottom: spacing.md },
     sectionLabel: { ...typography.h2, color: colors.textPrimary, marginTop: spacing.lg, marginBottom: spacing.xs },
     sourceCaption: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
     warningText: { ...typography.caption, color: colors.danger, marginBottom: spacing.xs },

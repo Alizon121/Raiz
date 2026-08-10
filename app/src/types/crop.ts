@@ -52,6 +52,7 @@ export interface CropDoc {
   registeredProducts: RegisteredProducts | null;
   residueData: ResidueData | null;
   residueReductionTips: string[];
+  imageUrl: string | null;
   lastUpdated: Date; // stored as a Firestore Timestamp; converted to Date on read
 }
 

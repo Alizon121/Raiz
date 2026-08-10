@@ -39,6 +39,7 @@ const FULL_CROP: Crop = {
     cumulativeExposureNote: "Multiple pesticides are frequently detected on the same sample.",
   },
   residueReductionTips: ["Rinse under running water."],
+  imageUrl: null,
   lastUpdated: new Date("2026-07-21T00:00:00Z"),
 };
 
