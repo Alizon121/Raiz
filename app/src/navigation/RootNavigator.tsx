@@ -28,9 +28,13 @@ const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const MainTabs = createBottomTabNavigator();
 
+// Transparent so ScreenBackground's gradient runs edge-to-edge behind the
+// header instead of being capped by an opaque header bar — screens using it
+// account for the header's height themselves via useHeaderHeight().
 const detailStackScreenOptions = {
-  headerTintColor: colors.forest,
-  headerStyle: { backgroundColor: colors.background },
+  headerTintColor: colors.textOnDark,
+  headerTransparent: true,
+  headerStyle: { backgroundColor: "transparent" },
   headerShadowVisible: false,
 };
 

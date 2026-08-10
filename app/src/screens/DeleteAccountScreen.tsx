@@ -1,3 +1,4 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Button from "../components/Button";
@@ -8,6 +9,7 @@ import { colors, spacing, typography } from "../theme";
 const CONFIRM_WORD = "DELETE";
 
 export default function DeleteAccountScreen() {
+  const headerHeight = useHeaderHeight();
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export default function DeleteAccountScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: headerHeight + spacing.xl }]}>
       <Text style={styles.title}>Delete Account</Text>
       <Text style={styles.body}>
         This permanently deletes your account, your scan history, and any ad-free status tied to it. This cannot be

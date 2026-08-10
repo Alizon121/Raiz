@@ -1,10 +1,12 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, spacing, typography } from "../theme";
 
 
 export default function AboutScreen() {
+    const headerHeight = useHeaderHeight();
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingTop: headerHeight + spacing.xl }]}>
             <Text style={styles.title}>About This App</Text>
             <Text style={styles.body}>
                 {`This app helps you identify produce items and provides information on reducing pesticide residue. \n\n I personally got tired of not knowing what big Ag was putting on my produce (especially with all the recents approved pesticides that are known to be harmful to humans and the environment).

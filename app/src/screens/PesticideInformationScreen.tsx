@@ -1,3 +1,4 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import type { ReactNode } from "react";
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ScreenBackground from "../components/ScreenBackground";
@@ -32,13 +33,14 @@ function EmptySection({ text }: { text: string }) {
 }
 
 export default function PesticideInformationScreen({ route }: Props) {
+    const headerHeight = useHeaderHeight();
     const { cropName, chemicalUse, registeredProducts, residueData } = route.params;
     const nearTolerance = findingsNearTolerance(residueData);
     const nearToleranceNames = new Set(nearTolerance.map((f) => f.chemical));
 
     return (
         <ScreenBackground>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: headerHeight + spacing.lg }]}>
             <Text style={styles.title}>Pesticide Information for {cropName}</Text>
 
             {/* --- Common pesticide active ingredients (USDA Ag Chemical Use) --- */}

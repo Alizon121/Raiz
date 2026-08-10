@@ -1,3 +1,4 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
@@ -15,6 +16,7 @@ type Props = NativeStackScreenProps<ScanStackParamList, "ScanConfirm">;
 type LookupState = { status: "loading" } | { status: "found"; crop: Crop } | { status: "not-found" } | { status: "error" };
 
 export default function ScanConfirmScreen({ route, navigation }: Props) {
+  const headerHeight = useHeaderHeight();
   const { plu } = route.params;
   const { user } = useAuth();
   const [state, setState] = useState<LookupState>({ status: "loading" });
@@ -37,7 +39,7 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 
   if (state.status === "loading") {
     return (
-      <ScreenBackground style={styles.center}>
+      <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
         <ActivityIndicator color={colors.forest} />
       </ScreenBackground>
     );
@@ -45,7 +47,7 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 
   if (state.status === "error") {
     return (
-      <ScreenBackground>
+      <ScreenBackground style={{ paddingTop: headerHeight }}>
         <EmptyState title="Something went wrong" body={`We couldn't look up PLU ${plu} right now. Check your connection and try again.`}>
           <Button label="Try again" onPress={() => navigation.replace("ScanConfirm", { plu })} style={styles.button} />
           <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
@@ -56,7 +58,7 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 
   if (state.status === "not-found") {
     return (
-      <ScreenBackground>
+      <ScreenBackground style={{ paddingTop: headerHeight }}>
         <EmptyState
           title="We don't have data for that yet"
           body={`PLU ${plu} isn't in our database yet. Double-check the code, or try scanning again.`}
@@ -70,7 +72,7 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 
   const { crop } = state;
   return (
-    <ScreenBackground style={styles.center}>
+    <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
       <Text style={styles.readAs}>We read</Text>
       <Text style={styles.pluCode}>{plu}</Text>
       <Text style={styles.title}>{crop.cropName}</Text>

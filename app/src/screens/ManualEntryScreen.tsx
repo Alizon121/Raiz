@@ -1,3 +1,4 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -11,6 +12,7 @@ import { isValidPluFormat } from "../utils/plu";
 type Props = NativeStackScreenProps<ScanStackParamList, "ManualEntry">;
 
 export default function ManualEntryScreen({ navigation }: Props) {
+  const headerHeight = useHeaderHeight();
   const [plu, setPlu] = useState("");
   const trimmed = plu.trim();
   const valid = isValidPluFormat(trimmed);
@@ -22,7 +24,7 @@ export default function ManualEntryScreen({ navigation }: Props) {
 
   return (
     <ScreenBackground>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: headerHeight }]}>
         <Text style={styles.title}>Enter a PLU code</Text>
         <Text style={styles.body}>PLU codes are the 4-5 digit numbers printed on produce stickers.</Text>
 

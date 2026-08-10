@@ -1,3 +1,4 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, radii, spacing, typography } from "../theme";
 import AdBanner from "../components/AdBanner";
@@ -9,11 +10,12 @@ import ScreenBackground from "../components/ScreenBackground";
 type Props = { route: { params: { cropName: string; tips: string[] } } };
 
 export default function ResidueReductionTipsScreen({ route }: Props) {
+  const headerHeight = useHeaderHeight();
   const { cropName, tips } = route.params;
 
   return (
     <ScreenBackground>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: headerHeight + spacing.lg }]}>
         <Text style={styles.title}>Reducing Residue on {cropName}</Text>
         <Text style={styles.body}>
           General food-safety practices for this crop. These tips are not a guarantee of removal.

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useHeaderHeight } from "@react-navigation/elements";
 import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -38,6 +39,7 @@ function formatDate(date: Date): string {
 }
 
 export default function ProduceDetailScreen({ route, navigation }: Props) {
+  const headerHeight = useHeaderHeight();
   const { cropId } = route.params;
   const [crop, setCrop] = useState<Crop | null | "loading" | "error">("loading");
   const [showSummaryInfo, setShowSummaryInfo] = useState(false);
@@ -55,7 +57,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
 
   if (crop === "loading") {
     return (
-      <ScreenBackground style={styles.center}>
+      <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
         <ActivityIndicator color={colors.forest} />
       </ScreenBackground>
     );
@@ -63,7 +65,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
 
   if (crop === "error" || crop === null) {
     return (
-      <ScreenBackground>
+      <ScreenBackground style={{ paddingTop: headerHeight }}>
         <EmptyState
           title={crop === null ? "Not found" : "Something went wrong"}
           body={
@@ -87,7 +89,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
 
   return (
     <ScreenBackground>
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: headerHeight + spacing.lg }]}>
       <Text style={styles.cropName}>{crop.cropName}</Text>
 
       {/* Required on every result screen, not just onboarding: this is statistical/typical

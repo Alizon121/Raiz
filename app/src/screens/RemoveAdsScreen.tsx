@@ -1,3 +1,4 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AdBanner from "../components/AdBanner";
 import Button from "../components/Button";
@@ -6,11 +7,12 @@ import { usePremium } from "../iap/PremiumContext";
 import { colors, radii, spacing, typography } from "../theme";
 
 export default function RemoveAdsScreen() {
+  const headerHeight = useHeaderHeight();
   const { ready, isPremium, purchasing, restoring, displayPrice, purchaseError, purchase, restore } = usePremium();
 
   if (isPremium) {
     return (
-      <ScreenBackground style={styles.container}>
+      <ScreenBackground style={[styles.container, { paddingTop: headerHeight }]}>
         <View style={styles.content}>
           <Text style={styles.title}>Remove Ads</Text>
           <Text style={styles.body}>You're all set! Ads are removed. Thanks for supporting Raiz!</Text>
@@ -20,7 +22,7 @@ export default function RemoveAdsScreen() {
   }
 
   return (
-    <ScreenBackground style={styles.container}>
+    <ScreenBackground style={[styles.container, { paddingTop: headerHeight }]}>
       <View style={styles.content}>
         <Text style={styles.title}>Remove Ads</Text>
         <Text style={styles.body}>

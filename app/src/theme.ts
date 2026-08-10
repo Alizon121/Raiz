@@ -36,7 +36,7 @@ export const colors = {
 // into the app's usual sage-cream background, echoing the onboarding art
 // without carrying its leaf-vein texture into every screen.
 export const backgroundGradient = [colors.forest, colors.background, colors.background] as const;
-export const backgroundGradientLocations = [0, 0.16, 1] as const;
+export const backgroundGradientLocations = [0, 0.4, 0.4] as const;
 
 // Soft per-slide badge tints for the onboarding carousel — desaturated
 // enough to read as neutral background, not a saturated color chip.
