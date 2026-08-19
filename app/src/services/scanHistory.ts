@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, orderBy, query, serverTimestamp, setDoc, type Timestamp } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc, type Timestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import type { ScanHistoryEntry } from "../types/scanHistory";
 
@@ -46,4 +46,8 @@ export async function getScanHistory(userId: string): Promise<ScanHistoryEntry[]
       scannedAt: data.scannedAt ? data.scannedAt.toDate() : new Date(),
     };
   });
+}
+
+export async function deleteScanHistoryEntry(userId: string, cropId: string): Promise<void> {
+  await deleteDoc(doc(scanHistoryCollection(userId), cropId));
 }

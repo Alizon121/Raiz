@@ -114,5 +114,5 @@ const styles = StyleSheet.create({
   rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
   rowMeta: { ...typography.caption, color: colors.textSecondary },
   rowDate: { ...typography.caption, color: colors.textSecondary },
-  rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 }
+  rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 },
 });

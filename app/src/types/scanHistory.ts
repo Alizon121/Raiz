@@ -9,3 +9,8 @@ export interface ScanHistoryEntry {
   imageUrl: string | null;
   scannedAt: Date;
 }
+
+export interface deleteScanHistoryEntry {
+  userId: string;
+  cropId: string;
+}
