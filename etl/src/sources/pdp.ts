@@ -1,5 +1,5 @@
 import AdmZip from "adm-zip";
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 import { downloadCached } from "../download.js";
 import type { CropSourceMapping, ResidueData, ResidueFinding } from "../types.js";
 
@@ -81,44 +81,58 @@ function parseResults(text: string): ResultRow[] {
   return rows;
 }
 
+/**
+ * Reads a worksheet as an array of rows (each row an array of cell values),
+ * skipping the same 4 title/header rows every PDP reference-table sheet
+ * ships with — data starts at (1-indexed) row 5. Row/col are 0-indexed
+ * arrays here, so `cell(row, 1)` below means "1-indexed column 1".
+ */
+function sheetRows(wb: XLSX.WorkBook, name: string): unknown[][] {
+  const sheet = wb.Sheets[name];
+  if (!sheet) return [];
+  return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, range: 4, defval: "" });
+}
+
+function cell(row: unknown[], col1Indexed: number): string {
+  return String(row[col1Indexed - 1] ?? "").trim();
+}
+
 async function parseReferenceTables(zip: AdmZip): Promise<{
   toleranceByKey: Map<string, ToleranceEntry>;
   pestNameByCode: Map<string, string>;
 }> {
-  const entry = zip.getEntries().find((e) => e.entryName.endsWith(".xlsx"));
-  if (!entry) throw new Error("PDP reference tables xlsx not found in zip");
+  // Only 2024 onward ships `.xlsx` — every earlier year (back through at
+  // least 2019, which is as far as PDP_MAX_FALLBACK_YEARS reaches) ships
+  // the legacy binary `.xls` instead. `xlsx` (SheetJS) reads both through
+  // one API; a `.xlsx`-only matcher here would throw as soon as
+  // buildResidueData's year-fallback reached a pre-2024 year.
+  const entry = zip.getEntries().find((e) => e.entryName.endsWith(".xlsx") || e.entryName.endsWith(".xls"));
+  if (!entry) throw new Error("PDP reference tables .xlsx/.xls not found in zip");
 
-  const wb = new ExcelJS.Workbook();
-  // exceljs's bundled types predate modern @types/node's Buffer<ArrayBufferLike> generic.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await wb.xlsx.load(entry.getData() as any);
+  const wb = XLSX.read(entry.getData(), { type: "buffer" });
 
   const toleranceByKey = new Map<string, ToleranceEntry>();
-  const toleranceSheet = wb.getWorksheet("Tolerance");
-  toleranceSheet?.eachRow((row, rowNumber) => {
-    if (rowNumber <= 4) return; // title rows + header
-    const pestCode = String(row.getCell(1).value ?? "").trim();
-    const commod = String(row.getCell(2).value ?? "").trim();
-    const rawVal = String(row.getCell(3).value ?? "").trim();
-    const unit = (String(row.getCell(4).value ?? "M").trim() as "M" | "B") || "M";
-    const note = String(row.getCell(5).value ?? "").trim() || null;
-    if (!pestCode || !commod) return;
+  for (const row of sheetRows(wb, "Tolerance")) {
+    const pestCode = cell(row, 1);
+    const commod = cell(row, 2);
+    const rawVal = cell(row, 3);
+    const unit = (cell(row, 4) as "M" | "B") || "M";
+    const note = cell(row, 5) || null;
+    if (!pestCode || !commod) continue;
     const numeric = Number(rawVal);
     toleranceByKey.set(`${pestCode}|${commod}`, {
       value: Number.isFinite(numeric) && rawVal !== "" ? numeric : null,
       unit,
       note: Number.isFinite(numeric) ? note : (rawVal || note), // surface NT/EX/SU as the note when non-numeric
     });
-  });
+  }
 
   const pestNameByCode = new Map<string, string>();
-  const pestSheet = wb.getWorksheet("Pest Code");
-  pestSheet?.eachRow((row, rowNumber) => {
-    if (rowNumber <= 4) return;
-    const code = String(row.getCell(1).value ?? "").trim();
-    const name = String(row.getCell(2).value ?? "").trim();
+  for (const row of sheetRows(wb, "Pest Code")) {
+    const code = cell(row, 1);
+    const name = cell(row, 2);
     if (code && name) pestNameByCode.set(code, name);
-  });
+  }
 
   return { toleranceByKey, pestNameByCode };
 }
