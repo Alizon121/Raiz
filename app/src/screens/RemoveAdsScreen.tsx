@@ -8,7 +8,8 @@ import { colors, radii, spacing, typography } from "../theme";
 
 export default function RemoveAdsScreen() {
   const headerHeight = useHeaderHeight();
-  const { ready, isPremium, purchasing, restoring, displayPrice, purchaseError, purchase, restore } = usePremium();
+  const { ready, isPremium, purchasing, restoring, displayPrice, purchaseError, restoreError, purchase, restore } =
+    usePremium();
 
   if (isPremium) {
     return (
@@ -43,6 +44,8 @@ export default function RemoveAdsScreen() {
           loading={purchasing}
           style={styles.button}
         />
+
+        {restoreError && <Text style={styles.errorText}>{restoreError}</Text>}
 
         <TouchableOpacity onPress={restore} disabled={!ready || purchasing || restoring} style={styles.restoreRow}>
           <Text style={styles.restoreText}>{restoring ? "Restoring…" : "Restore purchases"}</Text>

@@ -5,6 +5,10 @@ import RemoveAdsScreen from "../RemoveAdsScreen";
 import { PremiumProvider } from "../../iap/PremiumContext";
 import { REMOVE_ADS_SKU } from "../../iap/products";
 
+jest.mock("../../auth/AuthContext", () => ({
+  useAuth: () => ({ user: { uid: "user-1" } }),
+}));
+
 const mockUseIAP = useIAP as jest.Mock;
 
 const mockRequestPurchase = jest.fn().mockResolvedValue(undefined);

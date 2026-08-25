@@ -4,9 +4,27 @@ import ProduceDetailScreen from "../ProduceDetailScreen";
 import { PremiumProvider } from "../../iap/PremiumContext";
 import type { Crop } from "../../types/crop";
 
+jest.mock("../../auth/AuthContext", () => ({
+  useAuth: () => ({ user: { uid: "user-1" } }),
+}));
+
 const mockGetCropById = jest.fn();
 jest.mock("../../services/cropLookup", () => ({
   getCropById: (...args: unknown[]) => mockGetCropById(...args),
+}));
+
+const mockIsFavorited = jest.fn().mockResolvedValue(false);
+const mockAddFavorite = jest.fn().mockResolvedValue(undefined);
+const mockRemoveFavorite = jest.fn().mockResolvedValue(undefined);
+jest.mock("../../services/favorites", () => ({
+  isFavorited: (...args: unknown[]) => mockIsFavorited(...args),
+  addFavorite: (...args: unknown[]) => mockAddFavorite(...args),
+  removeFavorite: (...args: unknown[]) => mockRemoveFavorite(...args),
+}));
+
+const mockDeleteScanHistoryEntry = jest.fn().mockResolvedValue(undefined);
+jest.mock("../../services/scanHistory", () => ({
+  deleteScanHistoryEntry: (...args: unknown[]) => mockDeleteScanHistoryEntry(...args),
 }));
 
 const mockNavigate = jest.fn();
