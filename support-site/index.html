@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Raíz Support</title>
+<meta name="description" content="Support and contact information for the Raíz produce-scanning app." />
+<style>
+  :root {
+    --forest: #357A42;
+    --forest-dark: #1F4A29;
+    --background: #F6F8F5;
+    --surface: #FFFFFF;
+    --text-primary: #2C4A34;
+    --text-secondary: #4F6E58;
+    --border: #DEE3DC;
+    --link: #2E6A3B;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --forest: #6DBC6D;
+      --forest-dark: #8FD08F;
+      --background: #12241A;
+      --surface: #17301F;
+      --text-primary: #E9F2EA;
+      --text-secondary: #A9C4AE;
+      --border: #294530;
+      --link: #8FD08F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --forest: #6DBC6D;
+    --forest-dark: #8FD08F;
+    --background: #12241A;
+    --surface: #17301F;
+    --text-primary: #E9F2EA;
+    --text-secondary: #A9C4AE;
+    --border: #294530;
+    --link: #8FD08F;
+  }
+  :root[data-theme="light"] {
+    --forest: #357A42;
+    --forest-dark: #1F4A29;
+    --background: #F6F8F5;
+    --surface: #FFFFFF;
+    --text-primary: #2C4A34;
+    --text-secondary: #4F6E58;
+    --border: #DEE3DC;
+    --link: #2E6A3B;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 5rem;
+  }
+
+  header {
+    margin-bottom: 3rem;
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(160deg, var(--forest), var(--forest-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .mark { color: #0E1D13; }
+  }
+  :root[data-theme="dark"] .mark { color: #0E1D13; }
+  :root[data-theme="light"] .mark { color: #fff; }
+
+  .wordmark span {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    font-size: 1.875rem;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--text-secondary);
+    font-size: 1.0625rem;
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  h2 {
+    font-size: 1.0625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin: 0 0 1rem;
+    font-weight: 600;
+  }
+
+  section {
+    margin-bottom: 2.75rem;
+  }
+
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .contact-card p {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  .contact-card a.button {
+    display: inline-block;
+    background: var(--forest);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    padding: 0.625rem 1.125rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  @media (prefers-color-scheme: dark) {
+    .contact-card a.button { color: #0E1D13; }
+  }
+  :root[data-theme="dark"] .contact-card a.button { color: #0E1D13; }
+  :root[data-theme="light"] .contact-card a.button { color: #fff; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 0;
+  }
+  .faq-item:first-child { padding-top: 0; }
+  .faq-item:last-child { border-bottom: none; }
+
+  .faq-item h3 {
+    font-size: 1rem;
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+
+  .faq-item p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  a { color: var(--link); }
+
+  footer {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="wordmark">
+        <div class="mark">R</div>
+        <span>Raíz</span>
+      </div>
+      <h1>Support</h1>
+      <p class="lede">
+        Answers to common questions, and how to reach us if something isn't working right.
+      </p>
+    </header>
+
+    <section>
+      <h2>Contact</h2>
+      <div class="contact-card">
+        <div>
+          <strong>Have a question or ran into a bug?</strong>
+          <p>We usually reply within a couple of days.</p>
+        </div>
+        <a class="button" href="mailto:andrew.lizon12@gmail.com">Email support</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Frequently asked</h2>
+
+      <div class="faq-item">
+        <h3>How do I scan produce?</h3>
+        <p>
+          Open the Scan tab and point your camera at the PLU sticker on the item. If a code
+          doesn't scan cleanly, you can also enter the PLU number manually.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Where does the pesticide and residue data come from?</h3>
+        <p>
+          Raíz combines public data from the EPA Pesticide Product Label System, the USDA/FDA
+          Pesticide Data Program, and USDA NASS Quick Stats. It reflects typical, statistical
+          data for that crop type — not a lab test of the specific item you scanned.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>I subscribed to Remove Ads, but I still see ads. What do I do?</h3>
+        <p>
+          Open Settings → Remove Ads and tap "Restore purchases." This re-checks your
+          subscription with the App Store and should clear ads within a few seconds. If it still
+          doesn't resolve, email us with the approximate time you subscribed and which
+          device/platform you're on.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>How do I delete my account and data?</h3>
+        <p>
+          Open Settings → Delete Account. This permanently removes your account and all
+          associated data (scan history, favorites) and can't be undone.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Something else isn't working — what should I include when I email you?</h3>
+        <p>
+          The more detail the better: what you were doing, what you expected, what happened
+          instead, and your device model/OS version if it's a display or crash issue.
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      Raíz — produce pesticide &amp; residue lookup.
+    </footer>
+  </div>
+</body>
+</html>
