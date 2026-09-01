@@ -1,9 +1,10 @@
 import { useHeaderHeight } from "@react-navigation/elements";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AdBanner from "../components/AdBanner";
 import Button from "../components/Button";
 import ScreenBackground from "../components/ScreenBackground";
 import { usePremium } from "../iap/PremiumContext";
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from "../legal";
 import { colors, radii, spacing, typography } from "../theme";
 
 export default function RemoveAdsScreen() {
@@ -31,8 +32,11 @@ export default function RemoveAdsScreen() {
         </Text>
 
         <View style={styles.card}>
-          <Text style={styles.planLabel}>Ad-free</Text>
-          <Text style={styles.planPrice}>{displayPrice ?? "$0.99/month"}</Text>
+          <Text style={styles.planLabel}>Ad-free — Monthly subscription</Text>
+          <Text style={styles.planPrice}>{displayPrice ?? "$0.99"} / month</Text>
+          <Text style={styles.planTerms}>
+            Auto-renews monthly until canceled. Cancel anytime in your App Store account settings.
+          </Text>
         </View>
 
         {purchaseError && <Text style={styles.errorText}>{purchaseError}</Text>}
@@ -50,6 +54,16 @@ export default function RemoveAdsScreen() {
         <TouchableOpacity onPress={restore} disabled={!ready || purchasing || restoring} style={styles.restoreRow}>
           <Text style={styles.restoreText}>{restoring ? "Restoring…" : "Restore purchases"}</Text>
         </TouchableOpacity>
+
+        <View style={styles.legalRow}>
+          <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
+            <Text style={styles.legalText}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalDivider}>·</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(TERMS_OF_USE_URL)}>
+            <Text style={styles.legalText}>Terms of Use</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <AdBanner placement="removeAds" />
@@ -72,8 +86,12 @@ const styles = StyleSheet.create({
   },
   planLabel: { ...typography.body, fontWeight: "600", color: colors.textPrimary },
   planPrice: { ...typography.h2, color: colors.forestDark, marginTop: spacing.xs },
+  planTerms: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
   errorText: { ...typography.caption, color: colors.danger, marginBottom: spacing.md },
   button: { alignSelf: "stretch" },
   restoreRow: { alignItems: "center", marginTop: spacing.lg },
   restoreText: { ...typography.body, color: colors.forest, fontWeight: "600" },
+  legalRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: spacing.lg, gap: spacing.sm },
+  legalText: { ...typography.caption, color: colors.textSecondary, fontWeight: "600" },
+  legalDivider: { ...typography.caption, color: colors.textSecondary },
 });

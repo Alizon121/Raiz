@@ -7,13 +7,12 @@ import { signOut } from "../auth/authService";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
 import ScreenBackground from "../components/ScreenBackground";
+import { PRIVACY_POLICY_URL } from "../legal";
 import { resetOnboarding } from "./OnboardingScreen";
 import type { SettingsStackParamList } from "../navigation/types";
 import { colors, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<SettingsStackParamList, "Settings">;
-
-const PRIVACY_POLICY_URL = "https://github.com/Alizon121/Raiz/blob/main/PRIVACY_POLICY.md";
 
 interface ActionRow {
   label: string;
