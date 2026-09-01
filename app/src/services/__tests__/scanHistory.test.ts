@@ -26,19 +26,19 @@ beforeEach(() => {
 
 describe("addScanHistoryEntry", () => {
   test("writes to users/{userId}/scanHistory, keyed by cropId, with a server timestamp", async () => {
-    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4131" });
+    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4131", imageUrl: "https://example.com/apple.jpg" });
 
     expect(mockCollection).toHaveBeenCalledWith({ __fake: "db" }, "users", "user-1", "scanHistory");
     expect(mockDoc).toHaveBeenCalledWith({ __fake: "collectionRef", args: [{ __fake: "db" }, "users", "user-1", "scanHistory"] }, "apple");
     expect(mockSetDoc).toHaveBeenCalledWith(
       { __fake: "docRef", collectionRef: { __fake: "collectionRef", args: [{ __fake: "db" }, "users", "user-1", "scanHistory"] }, id: "apple" },
-      { cropId: "apple", cropName: "Apples", plu: "4131", scannedAt: { __fake: "serverTimestamp" } },
+      { cropId: "apple", cropName: "Apples", plu: "4131", imageUrl: "https://example.com/apple.jpg", scannedAt: { __fake: "serverTimestamp" } },
     );
   });
 
   test("re-scanning the same crop writes to the same doc rather than a new one, even with a different PLU variant", async () => {
-    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4131" });
-    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4130" });
+    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4131", imageUrl: null });
+    await addScanHistoryEntry("user-1", { cropId: "apple", cropName: "Apples", plu: "4130", imageUrl: null });
 
     expect(mockDoc.mock.calls[0][1]).toBe("apple");
     expect(mockDoc.mock.calls[1][1]).toBe("apple");
@@ -64,6 +64,7 @@ describe("getScanHistory", () => {
             cropId: "apple",
             cropName: "Apples",
             plu: "4131",
+            imageUrl: "https://example.com/apple.jpg",
             scannedAt: { toDate: () => new Date("2026-01-15T00:00:00Z") },
           }),
         },
@@ -73,8 +74,25 @@ describe("getScanHistory", () => {
     const result = await getScanHistory("user-1");
 
     expect(result).toEqual([
-      { id: "scan-1", cropId: "apple", cropName: "Apples", plu: "4131", scannedAt: new Date("2026-01-15T00:00:00Z") },
+      {
+        id: "scan-1",
+        cropId: "apple",
+        cropName: "Apples",
+        plu: "4131",
+        imageUrl: "https://example.com/apple.jpg",
+        scannedAt: new Date("2026-01-15T00:00:00Z"),
+      },
     ]);
+  });
+
+  test("falls back to null imageUrl for entries written before the field existed", async () => {
+    mockGetDocs.mockResolvedValue({
+      docs: [{ id: "scan-1", data: () => ({ cropId: "apple", cropName: "Apples", plu: "4131", scannedAt: null }) }],
+    });
+
+    const result = await getScanHistory("user-1");
+
+    expect(result[0]?.imageUrl).toBeNull();
   });
 
   test("falls back to the current time when scannedAt hasn't resolved yet", async () => {

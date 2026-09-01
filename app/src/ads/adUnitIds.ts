@@ -6,7 +6,7 @@ import { TestIds } from "react-native-google-mobile-ads";
 // official test unit ID whenever a real one hasn't been set in .env yet, so
 // dev builds always show fill without risking invalid-traffic flags from
 // requesting real ads during development.
-type Placement = "produceDetail" | "history" | "settings" | "removeAds" | "residue";
+type Placement = "produceDetail" | "history" | "favorites" | "settings" | "removeAds" | "residue";
 
 const REAL_BANNER_UNIT_IDS: Record<Placement, string | undefined> = {
   produceDetail: Platform.select({
@@ -16,6 +16,10 @@ const REAL_BANNER_UNIT_IDS: Record<Placement, string | undefined> = {
   history: Platform.select({
     ios: process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_HISTORY,
     android: process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_HISTORY,
+  }),
+  favorites: Platform.select({
+    ios: process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_FAVORITES,
+    android: process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_FAVORITES,
   }),
   settings: Platform.select({
     ios: process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_SETTINGS,

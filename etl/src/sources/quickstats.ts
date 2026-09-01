@@ -66,6 +66,32 @@ function parseNumericValue(raw: string): number | null {
   return Number(cleaned);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// A crop's chemicalUse legitimately being null (no survey data — e.g.
+// tomatillo, pineapple, banana) is a real, expected outcome of a completed
+// HTTP response and shouldn't be retried. A *thrown* fetch failure
+// (ECONNRESET, timeout, etc.) is different — transient, and previously
+// uncaught here, which meant one flaky connection crashed buildAllCropDocs'
+// Promise.all and aborted the entire ETL run, not just this one crop. EPA's
+// fetchProductDetail already retries for the same reason; this mirrors it.
+const MAX_ATTEMPTS = 3;
+
+async function fetchWithRetry(url: string): Promise<Response> {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await fetch(url, { headers: { "User-Agent": "produce-pesticide-scanner-etl/0.1" } });
+    } catch (err) {
+      if (attempt === MAX_ATTEMPTS) throw err;
+      console.warn(`  [quickstats] fetch failed (attempt ${attempt}/${MAX_ATTEMPTS}), retrying: ${(err as Error).message}`);
+      await sleep(1000 * attempt);
+    }
+  }
+  throw new Error("unreachable"); // loop always returns or throws above
+}
+
 export async function buildChemicalUse(
   crop: CropSourceMapping,
   apiKey: string | undefined,
@@ -82,9 +108,7 @@ export async function buildChemicalUse(
     format: "JSON",
   });
 
-  const res = await fetch(`${API_BASE}?${params.toString()}`, {
-    headers: { "User-Agent": "produce-pesticide-scanner-etl/0.1" },
-  });
+  const res = await fetchWithRetry(`${API_BASE}?${params.toString()}`);
   if (!res.ok) {
     console.warn(`  [quickstats] ${crop.cropId}: HTTP ${res.status} — ${await res.text()}`);
     return null;

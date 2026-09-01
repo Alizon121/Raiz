@@ -18,7 +18,7 @@ export default function EmptyState({ title, body, children }: { title?: string; 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
+  container: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.sm, textAlign: "center" },
   body: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginBottom: spacing.xl },
 });

@@ -37,6 +37,7 @@ export interface ResidueData {
   sourceYear: number;
   sampleSize: number;
   findings: ResidueFinding[];
+  dataAgeWarning: boolean;
   cumulativeExposureNote: string;
 }
 
@@ -48,6 +49,7 @@ export interface CropDoc {
   registeredProducts: RegisteredProducts | null;
   residueData: ResidueData | null;
   residueReductionTips: string[];
+  imageUrl: string | null;
   lastUpdated: string; // ISO timestamp; converted to Firestore Timestamp at write time
 }
 
@@ -63,4 +65,7 @@ export interface CropSourceMapping {
   epaSiteCodes: string[];
   /** USDA/FDA PDP two-letter COMMOD code(s), e.g. "AP" for apples. */
   pdpCommodityCodes: string[];
+  /** Thumbnail shown on History rows. Not sourced from any of the government
+   * datasets above — left unset until real photo assets/URLs are chosen. */
+  imageUrl?: string | null;
 }

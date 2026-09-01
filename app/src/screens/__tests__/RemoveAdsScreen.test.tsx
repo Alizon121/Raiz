@@ -5,6 +5,10 @@ import RemoveAdsScreen from "../RemoveAdsScreen";
 import { PremiumProvider } from "../../iap/PremiumContext";
 import { REMOVE_ADS_SKU } from "../../iap/products";
 
+jest.mock("../../auth/AuthContext", () => ({
+  useAuth: () => ({ user: { uid: "user-1" } }),
+}));
+
 const mockUseIAP = useIAP as jest.Mock;
 
 const mockRequestPurchase = jest.fn().mockResolvedValue(undefined);
@@ -62,8 +66,14 @@ async function renderScreen() {
 
 test("shows the subscription's store-reported price and a Subscribe button", async () => {
   await renderScreen();
-  expect(screen.getByText("$0.99")).toBeTruthy();
+  expect(screen.getByText("$0.99 / month")).toBeTruthy();
   expect(screen.getByText("Subscribe")).toBeTruthy();
+});
+
+test("shows links to the Privacy Policy and Terms of Use", async () => {
+  await renderScreen();
+  expect(screen.getByText("Privacy Policy")).toBeTruthy();
+  expect(screen.getByText("Terms of Use")).toBeTruthy();
 });
 
 test("tapping Subscribe requests the purchase for both platforms' SKU", async () => {

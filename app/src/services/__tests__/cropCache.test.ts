@@ -11,6 +11,7 @@ const APPLE: Crop = {
   registeredProducts: null,
   residueData: null,
   residueReductionTips: ["Rinse under running water."],
+  imageUrl: null,
   lastUpdated: new Date("2026-01-15T00:00:00Z"),
 };
 

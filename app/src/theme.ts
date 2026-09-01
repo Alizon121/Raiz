@@ -32,6 +32,12 @@ export const colors = {
   cautionBg: "rgba(230, 162, 60, 0.22)",
 } as const;
 
+// Top-to-bottom gradient stops for ScreenBackground — forest green easing
+// into the app's usual sage-cream background, echoing the onboarding art
+// without carrying its leaf-vein texture into every screen.
+export const backgroundGradient = [colors.forest, colors.background, colors.background] as const;
+export const backgroundGradientLocations = [0, 0.4, 0.4] as const;
+
 // Soft per-slide badge tints for the onboarding carousel — desaturated
 // enough to read as neutral background, not a saturated color chip.
 export const pastels = ["#E7EFE9", "#F5E9E8", "#F0EAE0", "#F4E7DE"] as const;

@@ -2,6 +2,10 @@ import { act, render, screen } from "@testing-library/react-native";
 import ResidueReductionTipsScreen from "../ResidueReductionTipsScreen";
 import { PremiumProvider } from "../../iap/PremiumContext";
 
+jest.mock("../../auth/AuthContext", () => ({
+  useAuth: () => ({ user: { uid: "user-1" } }),
+}));
+
 async function renderScreen(cropName: string, tips: string[]) {
   await act(async () => {
     render(

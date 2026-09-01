@@ -1,9 +1,11 @@
+import { useHeaderHeight } from "@react-navigation/elements";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
+import ScreenBackground from "../components/ScreenBackground";
 import { lookupCropByPlu } from "../services/cropLookup";
 import { addScanHistoryEntry } from "../services/scanHistory";
 import type { ScanStackParamList } from "../navigation/types";
@@ -14,6 +16,7 @@ type Props = NativeStackScreenProps<ScanStackParamList, "ScanConfirm">;
 type LookupState = { status: "loading" } | { status: "found"; crop: Crop } | { status: "not-found" } | { status: "error" };
 
 export default function ScanConfirmScreen({ route, navigation }: Props) {
+  const headerHeight = useHeaderHeight();
   const { plu } = route.params;
   const { user } = useAuth();
   const [state, setState] = useState<LookupState>({ status: "loading" });
@@ -36,36 +39,40 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
 
   if (state.status === "loading") {
     return (
-      <View style={styles.center}>
+      <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
         <ActivityIndicator color={colors.forest} />
-      </View>
+      </ScreenBackground>
     );
   }
 
   if (state.status === "error") {
     return (
-      <EmptyState title="Something went wrong" body={`We couldn't look up PLU ${plu} right now. Check your connection and try again.`}>
-        <Button label="Try again" onPress={() => navigation.replace("ScanConfirm", { plu })} style={styles.button} />
-        <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
-      </EmptyState>
+      <ScreenBackground style={{ paddingTop: headerHeight }}>
+        <EmptyState title="Something went wrong" body={`We couldn't look up PLU ${plu} right now. Check your connection and try again.`}>
+          <Button label="Try again" onPress={() => navigation.replace("ScanConfirm", { plu })} style={styles.button} />
+          <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
+        </EmptyState>
+      </ScreenBackground>
     );
   }
 
   if (state.status === "not-found") {
     return (
-      <EmptyState
-        title="We don't have data for that yet"
-        body={`PLU ${plu} isn't in our database yet. Double-check the code, or try scanning again.`}
-      >
-        <Button label="Enter a different code" onPress={() => navigation.navigate("ManualEntry")} style={styles.button} />
-        <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
-      </EmptyState>
+      <ScreenBackground style={{ paddingTop: headerHeight }}>
+        <EmptyState
+          title="We don't have data for that yet"
+          body={`PLU ${plu} isn't in our database yet. Double-check the code, or try scanning again.`}
+        >
+          <Button label="Enter a different code" onPress={() => navigation.navigate("ManualEntry")} style={styles.button} />
+          <Button label="Back to scan" variant="outline" onPress={() => navigation.navigate("Scan")} style={styles.button} />
+        </EmptyState>
+      </ScreenBackground>
     );
   }
 
   const { crop } = state;
   return (
-    <View style={styles.center}>
+    <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
       <Text style={styles.readAs}>We read</Text>
       <Text style={styles.pluCode}>{plu}</Text>
       <Text style={styles.title}>{crop.cropName}</Text>
@@ -75,18 +82,21 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
         onPress={() => {
           // Fire-and-forget: history is a nice-to-have log, not something
           // that should block or fail the user's actual navigation forward.
-          if (user) addScanHistoryEntry(user.uid, { cropId: crop.cropId, cropName: crop.cropName, plu }).catch(() => {});
+          if (user)
+            addScanHistoryEntry(user.uid, { cropId: crop.cropId, cropName: crop.cropName, plu, imageUrl: crop.imageUrl }).catch(
+              () => {},
+            );
           navigation.replace("ProduceDetail", { cropId: crop.cropId });
         }}
         style={styles.button}
       />
       <Button label="No, enter it manually" variant="outline" onPress={() => navigation.navigate("ManualEntry")} style={styles.button} />
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   readAs: { ...typography.caption, color: colors.textSecondary },
   pluCode: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.sm },
   title: { ...typography.h1, color: colors.textPrimary, textAlign: "center", marginBottom: spacing.sm },

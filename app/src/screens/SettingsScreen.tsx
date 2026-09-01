@@ -6,13 +6,13 @@ import { resetConsentForTesting } from "../ads/initAds";
 import { signOut } from "../auth/authService";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
+import ScreenBackground from "../components/ScreenBackground";
+import { PRIVACY_POLICY_URL } from "../legal";
 import { resetOnboarding } from "./OnboardingScreen";
 import type { SettingsStackParamList } from "../navigation/types";
 import { colors, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<SettingsStackParamList, "Settings">;
-
-const PRIVACY_POLICY_URL = "https://github.com/Alizon121/Raiz/blob/main/PRIVACY_POLICY.md";
 
 interface ActionRow {
   label: string;
@@ -79,7 +79,7 @@ export default function SettingsScreen({ navigation }: Props) {
   ].filter((row): row is ActionRow => row !== null);
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>More</Text>
 
@@ -111,14 +111,14 @@ export default function SettingsScreen({ navigation }: Props) {
       </View>
 
       <AdBanner placement="settings" />
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { flex: 1, padding: spacing.xl },
-  title: { ...typography.h1, color: colors.textPrimary, marginTop: spacing.xl, marginBottom: spacing.md },
+  title: { ...typography.h1, color: colors.textOnDark, marginTop: spacing.xl, marginBottom: spacing.md },
   section: { marginTop: spacing.lg },
   subHeader: { ...typography.h2, color: colors.textPrimary, marginBottom: spacing.sm },
   card: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: spacing.md },

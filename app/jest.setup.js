@@ -24,6 +24,14 @@ jest.mock("react-native-google-mobile-ads", () => {
   };
 });
 
+// useHeaderHeight() reads from a context only provided by an actual
+// react-navigation header — screens are rendered standalone in tests
+// (navigation is passed in as a plain prop), so stub a fixed value.
+jest.mock("@react-navigation/elements", () => ({
+  ...jest.requireActual("@react-navigation/elements"),
+  useHeaderHeight: () => 44,
+}));
+
 jest.mock("expo-tracking-transparency", () => ({
   getTrackingPermissionsAsync: jest.fn().mockResolvedValue({ status: "undetermined" }),
   requestTrackingPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),

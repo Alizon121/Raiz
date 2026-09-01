@@ -18,10 +18,15 @@ test("crops.seed: every crop has at least one PLU code", () => {
   }
 });
 
-test("crops.seed: every crop has exactly one EPA site code and one PDP commodity code", () => {
+test("crops.seed: every crop has exactly one EPA site code, and at most one PDP commodity code", () => {
   for (const crop of CROP_SEED) {
     assert.equal(crop.epaSiteCodes.length, 1, `${crop.cropId} should have exactly one epaSiteCode`);
-    assert.equal(crop.pdpCommodityCodes.length, 1, `${crop.cropId} should have exactly one pdpCommodityCode`);
+    // 0 is legitimate (not a mistake) for a crop PDP hasn't tested within
+    // PDP_MAX_FALLBACK_YEARS' reach — e.g. strawberry, see crops.seed.ts.
+    assert.ok(
+      crop.pdpCommodityCodes.length <= 1,
+      `${crop.cropId} should have at most one pdpCommodityCode`,
+    );
   }
 });
 
@@ -41,8 +46,17 @@ test("crops.seed: PDP commodity codes are exactly 2 letters (matches the PDP Com
   }
 });
 
-test("crops.seed: no two crops share an EPA site code or a PDP commodity code", () => {
-  const siteCodes = CROP_SEED.flatMap((c) => c.epaSiteCodes);
+// tomato/tomato-cherry are the one legitimate exception: verified live
+// against sitename.zip that EPA's site vocabulary has no separate
+// registration site for cherry tomatoes at all — every tomato variety
+// registers under the single generic TOMATOES (FOLIAR TREATMENT) site
+// (110050106), so both crops correctly share it. PDP does distinguish them
+// (commodity codes TO vs. CT), which is why residueData still differs
+// between the two even though registeredProducts will be identical.
+const KNOWN_SHARED_SITE_CODES = new Set(["110050106"]);
+
+test("crops.seed: no two crops share an EPA site code or a PDP commodity code, aside from documented exceptions", () => {
+  const siteCodes = CROP_SEED.flatMap((c) => c.epaSiteCodes).filter((code) => !KNOWN_SHARED_SITE_CODES.has(code));
   const pdpCodes = CROP_SEED.flatMap((c) => c.pdpCommodityCodes);
   assert.equal(new Set(siteCodes).size, siteCodes.length, "a duplicate EPA site code exists across crops");
   assert.equal(new Set(pdpCodes).size, pdpCodes.length, "a duplicate PDP commodity code exists across crops");

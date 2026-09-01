@@ -77,6 +77,7 @@ module.exports = {
     userInterfaceStyle: "light",
     ios: {
       bundleIdentifier: "com.pesticideraiz.app",
+      buildNumber: "2",
       supportsTablet: true,
       usesAppleSignIn: true,
       googleServicesFile: "./GoogleService-Info.plist",

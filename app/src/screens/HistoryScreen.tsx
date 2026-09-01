@@ -1,10 +1,12 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
 import EmptyState from "../components/EmptyState";
+import IconBadge from "../components/IconBadge";
+import ScreenBackground from "../components/ScreenBackground";
 import type { HistoryStackParamList } from "../navigation/types";
 import { getScanHistory } from "../services/scanHistory";
 import type { ScanHistoryEntry } from "../types/scanHistory";
@@ -38,7 +40,7 @@ export default function HistoryScreen({ navigation }: Props) {
   );
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground style={styles.container}>
       <Text style={styles.title}>History</Text>
 
       {state === "loading" && (
@@ -68,6 +70,13 @@ export default function HistoryScreen({ navigation }: Props) {
               style={styles.row}
               onPress={() => navigation.navigate("ProduceDetail", { cropId: item.cropId })}
             >
+              {item.imageUrl ? (
+                <Image source={{ uri: item.imageUrl }} style={styles.rowImage} />
+              ) : (
+                <View style={styles.rowImage}>
+                  <IconBadge name="leaf-outline" size={48} />
+                </View>
+              )}
               <View style={styles.rowTextGroup}>
                 <Text style={styles.rowTitle}>{item.cropName}</Text>
                 <Text style={styles.rowMeta}>PLU {item.plu}</Text>
@@ -80,13 +89,13 @@ export default function HistoryScreen({ navigation }: Props) {
       )}
 
       <AdBanner placement="history" />
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 32, backgroundColor: colors.background },
-  title: { ...typography.title, color: colors.forestDark, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
+  container: { flex: 1, paddingTop: 32 },
+  title: { ...typography.title, color: colors.textOnDark, marginTop: spacing.xl, marginHorizontal: spacing.xl, marginBottom: spacing.md },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   list: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
   row: {
@@ -100,9 +109,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
+  rowImage: { width: 48, height: 48, borderRadius: radii.sm, marginRight: spacing.sm },
   rowTextGroup: { flex: 1, paddingRight: spacing.sm },
   rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
   rowMeta: { ...typography.caption, color: colors.textSecondary },
   rowDate: { ...typography.caption, color: colors.textSecondary },
-  rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 }
+  rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 },
 });

@@ -34,6 +34,13 @@ export type HistoryStackParamList = {
   PesticideInformation: PesticideInformationParams;
 };
 
+export type FavoritesStackParamList = {
+  Favorites: undefined;
+  ProduceDetail: { cropId: string };
+  ResidueReductionTips: { cropName: string; tips: string[] };
+  PesticideInformation: PesticideInformationParams;
+};
+
 export type SettingsStackParamList = {
   Settings: undefined;
   About: undefined;

@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import AuthWelcomeScreen from "../screens/AuthWelcomeScreen";
 import EmailAuthScreen from "../screens/EmailAuthScreen";
+import FavoriteScreen from "../screens/FavoriteScreen";
 import HistoryScreen from "../screens/HistoryScreen";
 import ManualEntryScreen from "../screens/ManualEntryScreen";
 import OnboardingScreen, { hasSeenOnboarding } from "../screens/OnboardingScreen";
@@ -20,17 +21,28 @@ import AboutScreen from "../screens/AboutScreen";
 import RemoveAdsScreen from "../screens/RemoveAdsScreen";
 import DeleteAccountScreen from "../screens/DeleteAccountScreen";
 import { colors } from "../theme";
-import type { AuthStackParamList, HistoryStackParamList, ScanStackParamList, SettingsStackParamList } from "./types";
+import type {
+  AuthStackParamList,
+  FavoritesStackParamList,
+  HistoryStackParamList,
+  ScanStackParamList,
+  SettingsStackParamList,
+} from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const ScanStack = createNativeStackNavigator<ScanStackParamList>();
 const HistoryStack = createNativeStackNavigator<HistoryStackParamList>();
+const FavoritesStack = createNativeStackNavigator<FavoritesStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const MainTabs = createBottomTabNavigator();
 
+// Transparent so ScreenBackground's gradient runs edge-to-edge behind the
+// header instead of being capped by an opaque header bar — screens using it
+// account for the header's height themselves via useHeaderHeight().
 const detailStackScreenOptions = {
-  headerTintColor: colors.forest,
-  headerStyle: { backgroundColor: colors.background },
+  headerTintColor: colors.textOnDark,
+  headerTransparent: true,
+  headerStyle: { backgroundColor: "transparent" },
   headerShadowVisible: false,
 };
 
@@ -74,6 +86,25 @@ function HistoryNavigator() {
   );
 }
 
+function FavoritesNavigator() {
+  return (
+    <FavoritesStack.Navigator screenOptions={detailStackScreenOptions}>
+      <FavoritesStack.Screen name="Favorites" component={FavoriteScreen} options={{ headerShown: false }} />
+      <FavoritesStack.Screen name="ProduceDetail" component={ProduceDetailScreen} options={{ title: "" }} />
+      <FavoritesStack.Screen
+        name="ResidueReductionTips"
+        component={ResidueReductionTipsScreen}
+        options={{ title: "" }}
+      />
+      <FavoritesStack.Screen
+        name="PesticideInformation"
+        component={PesticideInformationScreen}
+        options={{ title: "" }}
+      />
+    </FavoritesStack.Navigator>
+  );
+}
+
 function SettingsNavigator() {
   return (
     <SettingsStack.Navigator screenOptions={detailStackScreenOptions}>
@@ -103,6 +134,11 @@ function MainNavigator() {
         name="History"
         component={HistoryNavigator}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} /> }}
+      />
+      <MainTabs.Screen
+        name="Favorites"
+        component={FavoritesNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="star-outline" size={size} color={color} /> }}
       />
       <MainTabs.Screen
         name="More"

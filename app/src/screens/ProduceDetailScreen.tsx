@@ -1,11 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useHeaderHeight } from "@react-navigation/elements";
 import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
+import ScreenBackground from "../components/ScreenBackground";
 import { getCropById } from "../services/cropLookup";
+import { addFavorite, isFavorited, removeFavorite } from "../services/favorites";
+import { deleteScanHistoryEntry } from "../services/scanHistory";
 import { countActiveIngredientsByCategory, findingsNearTolerance, percentOfTolerance } from "../utils/chemicalProfile";
 import type { ActiveIngredientUse, Crop } from "../types/crop";
 import { colors, radii, spacing, typography } from "../theme";
@@ -37,9 +42,34 @@ function formatDate(date: Date): string {
 }
 
 export default function ProduceDetailScreen({ route, navigation }: Props) {
+  const headerHeight = useHeaderHeight();
   const { cropId } = route.params;
+  const { user } = useAuth();
   const [crop, setCrop] = useState<Crop | null | "loading" | "error">("loading");
   const [showSummaryInfo, setShowSummaryInfo] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+  const [togglingFavorite, setTogglingFavorite] = useState(false);
+
+  function handleRemoveFromHistory(cropName: string) {
+    if (!user) return;
+    Alert.alert("Remove from history?", `This removes ${cropName} from your scan history.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => {
+          setRemoving(true);
+          deleteScanHistoryEntry(user.uid, cropId)
+            .then(() => navigation.goBack())
+            .catch(() => {
+              setRemoving(false);
+              Alert.alert("Something went wrong", "We couldn't remove this from your history. Check your connection and try again.");
+            });
+        },
+      },
+    ]);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -52,26 +82,53 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
     };
   }, [cropId]);
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    isFavorited(user.uid, cropId)
+      .then((result) => !cancelled && setFavorited(result))
+      .catch(() => { });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, cropId]);
+
+  function handleToggleFavorite(cropName: string, imageUrl: string | null) {
+    if (!user || togglingFavorite) return;
+    setTogglingFavorite(true);
+    const wasFavorited = favorited;
+    // Optimistic — flip immediately, roll back if the write fails.
+    setFavorited(!wasFavorited);
+    const request = wasFavorited
+      ? removeFavorite(user.uid, cropId)
+      : addFavorite(user.uid, { cropId, cropName, imageUrl });
+    request
+      .catch(() => setFavorited(wasFavorited))
+      .finally(() => setTogglingFavorite(false));
+  }
+
   if (crop === "loading") {
     return (
-      <View style={styles.center}>
+      <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
         <ActivityIndicator color={colors.forest} />
-      </View>
+      </ScreenBackground>
     );
   }
 
   if (crop === "error" || crop === null) {
     return (
-      <EmptyState
-        title={crop === null ? "Not found" : "Something went wrong"}
-        body={
-          crop === null
-            ? "This item no longer has data available."
-            : "We couldn't load this item right now. Check your connection and try again."
-        }
-      >
-        <Button label="Go back" onPress={() => navigation.goBack()} style={styles.backButton} />
-      </EmptyState>
+      <ScreenBackground style={{ paddingTop: headerHeight }}>
+        <EmptyState
+          title={crop === null ? "Not found" : "Something went wrong"}
+          body={
+            crop === null
+              ? "This item no longer has data available."
+              : "We couldn't load this item right now. Check your connection and try again."
+          }
+        >
+          <Button label="Go back" onPress={() => navigation.goBack()} style={styles.backButton} />
+        </EmptyState>
+      </ScreenBackground>
     );
   }
 
@@ -83,112 +140,142 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
   const nearTolerance = findingsNearTolerance(residueData);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.cropName}>{crop.cropName}</Text>
+    <ScreenBackground>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: headerHeight + spacing.lg }]}>
+        <Text style={styles.cropName}>{crop.cropName}</Text>
 
-      {/* Required on every result screen, not just onboarding: this is statistical/typical
+        {/* Required on every result screen, not just onboarding: this is statistical/typical
           data for the crop type, not a lab test of the specific item scanned. */}
-      <View style={styles.disclaimerBox}>
-        <Ionicons name="information-circle-outline" size={18} color={colors.forest} />
-        <Text style={styles.disclaimerText}>
-          This shows typical, statistical data for {crop.cropName.toLowerCase()} as a crop type, and NOT a lab test of
-          the specific item you scanned.
-        </Text>
-      </View>
-
-      {/* --- At-a-glance summary: category counts + any residue findings worth a closer look --- */}
-      <View style={styles.summaryCard}>
-        <View style={styles.summaryTitleRow}>
-          <Text style={styles.summaryTitle}>Chemical Profile at a Glance</Text>
-          <TouchableOpacity
-            onPress={() => setShowSummaryInfo((prev) => !prev)}
-            accessibilityRole="button"
-            accessibilityLabel="What does this summary show?"
-            hitSlop={8}
-          >
-            <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-        {showSummaryInfo && (
-          <Text style={styles.summaryInfoText}>
-            Counts how many of this crop's top pesticide active ingredients fall into each category below, and flags
-            any residue finding close to its legal tolerance — a quick overview before the full data further down.
+        <View style={styles.disclaimerBox}>
+          <Ionicons name="information-circle-outline" size={18} color={colors.forest} />
+          <Text style={styles.disclaimerText}>
+            This shows typical, statistical data for {crop.cropName.toLowerCase()} as a crop type, and NOT a lab test of
+            the specific item you scanned.
           </Text>
-        )}
-        {categoryEntries.length > 0 ? (
-          <View style={styles.summaryChips}>
-            {categoryEntries.map(({ category, count }) => (
-              <View key={category} style={styles.summaryChip}>
-                <Text style={styles.summaryChipText}>
-                  {count} {CATEGORY_LABELS[category]}
-                  {count === 1 ? "" : "s"}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.summaryEmptyText}>No chemical use data available yet for this crop.</Text>
-        )}
+        </View>
 
-        {residueData && residueData.findings.length > 0 && (
-          nearTolerance.length > 0 ? (
-            <View style={styles.cautionBox}>
-              <Ionicons name="alert-circle-outline" size={16} color={colors.caution} />
-              <Text style={styles.cautionText}>
-                Worth a closer look — found at 75%+ of the legal tolerance:{" "}
-                {nearTolerance.map((f) => `${f.chemical} (${percentOfTolerance(f)}%)`).join(", ")}.
-              </Text>
+        {/* --- At-a-glance summary: category counts + any residue findings worth a closer look --- */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryTitleRow}>
+            <Text style={styles.summaryTitle}>Chemical Profile at a Glance</Text>
+            <TouchableOpacity
+              onPress={() => setShowSummaryInfo((prev) => !prev)}
+              accessibilityRole="button"
+              accessibilityLabel="What does this summary show?"
+              hitSlop={8}
+            >
+              <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          {showSummaryInfo && (
+            <Text style={styles.summaryInfoText}>
+              Counts how many of this crop's top pesticide active ingredients fall into each category below, and flags
+              any residue finding close to its legal tolerance — a quick overview before the full data further down.
+            </Text>
+          )}
+          {categoryEntries.length > 0 ? (
+            <View style={styles.summaryChips}>
+              {categoryEntries.map(({ category, count }) => (
+                <View key={category} style={styles.summaryChip}>
+                  <Text style={styles.summaryChipText}>
+                    {count} {CATEGORY_LABELS[category]}
+                    {count === 1 ? "" : "s"}
+                  </Text>
+                </View>
+              ))}
             </View>
           ) : (
-            <View style={styles.clearBox}>
-              <Ionicons name="checkmark-circle-outline" size={16} color={colors.forestDark} />
-              <Text style={styles.clearText}>No chemicals were found near their legal tolerance levels (75%+).</Text>
-            </View>
-          )
-        )}
+            <Text style={styles.summaryEmptyText}>No chemical use data available yet for this crop.</Text>
+          )}
 
-        {residueReductionTips.length > 0 && (
-          <TouchableOpacity
-            style={styles.summaryLinkRow}
-            onPress={() => navigation.navigate("ResidueReductionTips", { cropName: crop.cropName, tips: residueReductionTips })}
-          >
-            <Text style={styles.summaryLinkText}>See tips to reduce residue</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.forest} />
-          </TouchableOpacity>
-        )}
+          {residueData && residueData.findings.length > 0 && (
+            nearTolerance.length > 0 ? (
+              <View style={styles.cautionBox}>
+                <Ionicons name="alert-circle-outline" size={16} color={colors.caution} />
+                <Text style={styles.cautionText}>
+                  Worth a closer look — found at 75%+ of the legal tolerance:{" "}
+                  {nearTolerance.map((f) => `${f.chemical} (${percentOfTolerance(f)}%)`).join(", ")}.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.clearBox}>
+                <Ionicons name="checkmark-circle-outline" size={16} color={colors.forestDark} />
+                <Text style={styles.clearText}>No chemicals were found near their legal tolerance levels (75%+).</Text>
+              </View>
+            )
+          )}
 
-        {chemicalUse && (
-          <TouchableOpacity
-            style={styles.summaryLinkRow}
-            onPress={() => navigation.navigate("PesticideInformation", { cropName: crop.cropName, chemicalUse, registeredProducts, residueData })}
-          >
-            <Text style={styles.summaryLinkText}>Detailed Pesticide Information</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.forest} />
-          </TouchableOpacity>
-        )}
-      </View>
+          {residueReductionTips.length > 0 && (
+            <TouchableOpacity
+              style={styles.summaryLinkRow}
+              onPress={() => navigation.navigate("ResidueReductionTips", { cropName: crop.cropName, tips: residueReductionTips })}
+            >
+              <Text style={styles.summaryLinkText}>See tips to reduce residue</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.forest} />
+            </TouchableOpacity>
+          )}
 
-      <AdBanner placement="produceDetail" />
-      {/* --- Persistent source/date footer --- */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Data current as of {formatDate(crop.lastUpdated)}</Text>
-        {SOURCE_LINKS.map((link) => (
-          <TouchableOpacity key={link.url} onPress={() => Linking.openURL(link.url)}>
-            <Text style={styles.footerLink}>{link.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+          {chemicalUse && (
+            <TouchableOpacity
+              style={styles.summaryLinkRow}
+              onPress={() => navigation.navigate("PesticideInformation", { cropName: crop.cropName, chemicalUse, registeredProducts, residueData })}
+            >
+              <Text style={styles.summaryLinkText}>Detailed Pesticide Information</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.forest} />
+            </TouchableOpacity>
+          )}
 
-    </ScrollView>
+          {user && (
+            <TouchableOpacity
+              style={styles.summaryLinkRow}
+              onPress={() => handleToggleFavorite(crop.cropName, crop.imageUrl)}
+              disabled={togglingFavorite}
+            >
+              <Text style={favorited ? styles.removeText : styles.summaryLinkText}>
+                {favorited ? "Remove from Favorites" : "Add to Favorites"}
+              </Text>
+              <Ionicons
+                name={favorited ? "star" : "star-outline"}
+                size={18}
+                color={favorited ? colors.caution : colors.forest}
+              />
+            </TouchableOpacity>
+          )}
+
+          {user && (
+            <TouchableOpacity
+              style={styles.summaryLinkRow}
+              onPress={() => handleRemoveFromHistory(crop.cropName)}
+              disabled={removing}
+            >
+              <Text style={styles.removeText}>{removing ? "Removing…" : "Remove from History"}</Text>
+              <Ionicons name="trash-outline" size={18} color={colors.caution} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <AdBanner placement="produceDetail" />
+        {/* --- Persistent source/date footer --- */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Data current as of {formatDate(crop.lastUpdated)}</Text>
+          {SOURCE_LINKS.map((link) => (
+            <TouchableOpacity key={link.url} onPress={() => Linking.openURL(link.url)}>
+              <Text style={styles.footerLink}>{link.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, padding: spacing.xl },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl },
   backButton: { alignSelf: "stretch" },
-  cropName: { ...typography.title, color: colors.textPrimary, marginBottom: spacing.md },
+  cropName: { ...typography.title, color: colors.textOnDark, marginBottom: spacing.md },
   disclaimerBox: {
     flexDirection: "row",
     gap: spacing.sm,
@@ -243,6 +330,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   summaryLinkText: { ...typography.body, color: colors.forest, fontWeight: "600" },
+  removeText: { ...typography.body, color: colors.caution, fontWeight: "600" },
   footer: { marginTop: spacing.xl, paddingTop: spacing.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   footerText: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.sm },
   footerLink: { ...typography.caption, color: colors.forest, fontWeight: "600", marginBottom: spacing.xs },
