@@ -9,8 +9,8 @@ export default function AboutScreen() {
         <View style={[styles.container, { paddingTop: headerHeight + spacing.xl }]}>
             <Text style={styles.title}>About This App</Text>
             <Text style={styles.body}>
-                {`This app helps you identify produce items and provides information on reducing pesticide residue. \n\n I personally got tired of not knowing what big Ag was putting on my produce (especially with all the recents approved pesticides that are known to be harmful to humans and the environment).
-                \n\nSo I created this app to help people make smarter decisions about the food they eat and live a little healthier because that is just one more step for us getting out the matrix ;)`}.
+                {`This app helps you identify produce items and provides information on reducing pesticide residue. \n\nI personally got tired of not knowing what big Ag was putting on my produce (especially with all the recent approved pesticides that are known to be harmful to humans and the environment).
+                \n\nSo, I created this app to help people make smarter decisions about the food they eat and live a little healthier because that is just one more step for us living more consciously.`}.
             </Text>
         </View>
     );

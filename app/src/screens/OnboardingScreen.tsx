@@ -29,7 +29,7 @@ const SLIDES: Slide[] = [
   {
     Illustration: IllustrationApple,
     title: "Know What's On Your Produce",
-    body: "Raiz surfaces the pesticide data USDA and EPA already publish on the fruits and vegetables you buy — sourced, dated, and easy to check yourself.",
+    body: "Raiz surfaces the pesticide data USDA and EPA already published on the fruits and vegetables you buy — sourced, dated, and easy to check yourself.",
   },
   {
     Illustration: IllustrationCarrot,

@@ -25,7 +25,13 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "apple",
     cropName: "Apples",
-    plu: ["4131", "4130", "4129", "3000"],
+    // Additional varieties confirmed live against plufinder.com (per-code
+    // lookup, same standard as batches 1-6 below): 3283 Honeycrisp, 3284 Red
+    // Delicious, 4020/4021 Golden Delicious (small/large), 4124 Empire, 4109
+    // Crispin/Mutsu. (Existing 4131/4129 are both Fuji, 4130 is Pink
+    // Lady/Cripps Pink, 4174 is Royal Gala per the same source — noted here
+    // since it wasn't documented when this entry was first written.)
+    plu: ["4131", "4130", "4129", "4174", "3000", "3283", "3284", "4020", "4021", "4124", "4109"],
     commonAliases: ["apple", "apples", "gala apple", "fuji apple"],
     quickStatsCommodity: "APPLES",
     epaSiteCodes: ["040010106"],
@@ -35,7 +41,9 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "potato",
     cropName: "Potatoes",
-    plu: ["4072", "4073", "4083"],
+    // 4727 Yellow/Yukon Gold potato and 4723 Red Creamer potato confirmed
+    // live against plufinder.com.
+    plu: ["4072", "4073", "4083", "4727", "4723"],
     commonAliases: ["potato", "potatoes", "russet potato"],
     quickStatsCommodity: "POTATOES",
     epaSiteCodes: ["140130106"],
@@ -45,7 +53,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "orange",
     cropName: "Oranges",
-    plu: ["4012", "4196", "3027"],
+    // 4014 Valencia and 4381 Blood Orange confirmed live against
+    // plufinder.com. 4196 was previously (incorrectly) listed here too —
+    // re-verified live against plufinder.com and it actually resolves to
+    // "Crimson Snow Apple," not any orange; removed.
+    plu: ["4012", "3027", "4014", "4381"],
     commonAliases: ["orange", "oranges", "navel orange"],
     quickStatsCommodity: "ORANGES",
     epaSiteCodes: ["020060106"],
@@ -65,7 +77,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "onion",
     cropName: "Onions",
-    plu: ["4082", "4663", "4093"],
+    // 4159 Vidalia and 4166 (generic) Sweet Onion confirmed live against
+    // plufinder.com. (Existing 4082/4663/4093 are red/white/yellow onion
+    // respectively per the same source.)
+    plu: ["4082", "4663", "4093", "4159", "4166"],
     commonAliases: ["onion", "onions", "yellow onion"],
     quickStatsCommodity: "ONIONS",
     epaSiteCodes: ["140110107"],
@@ -75,7 +90,14 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "cucumber",
     cropName: "Cucumbers",
-    plu: ["4062", "4593", "4184"],
+    // 4594 Japanese/White cucumber and 4596 Gherkin/pickling cucumber
+    // confirmed live against plufinder.com — both Cucumis sativus, same
+    // species as the existing codes. (Armenian cucumber, PLU 4592, was
+    // considered but NOT added: it's Cucumis melo var. flexuosus, a
+    // different species, not a variety of this crop. Note also: existing
+    // code 4184 returned a 404 on plufinder.com — could not confirm it live;
+    // left in place since fixing existing entries is out of scope here.)
+    plu: ["4062", "4593", "4594", "4596"],
     commonAliases: ["cucumber", "cucumbers"],
     quickStatsCommodity: "CUCUMBERS",
     epaSiteCodes: ["100100106"],
@@ -85,7 +107,9 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "avocado",
     cropName: "Avocado",
-    plu: ["4046", "4225", "4770"],
+    // 3509 Gem avocado confirmed live against plufinder.com — same species
+    // (Persea americana) as the existing Hass codes, different cultivar.
+    plu: ["4046", "4225", "4770", "3509"],
     commonAliases: ["avocado", "avocados", "hass avocado"],
     quickStatsCommodity: "AVOCADOS",
     epaSiteCodes: ["280000106"],
@@ -95,7 +119,14 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "tomato-cherry",
     cropName: "Cherry Tomatoes",
-    plu: ["4087", "3363"],
+    // 4796 Cherry Tomato (red), 4797 Cherry Tomato (yellow), and 4803
+    // Teardrop Cherry Tomato (red) confirmed live against plufinder.com.
+    // 4087 and 3363 were previously (incorrectly) listed here too —
+    // re-verified live against plufinder.com: 4087 actually resolves to
+    // "Tomato (Plum/Italian/Saladette/Roma - Red)", not cherry tomato, and
+    // 3363 actually resolves to "Kensington Pride Mango," not any tomato at
+    // all. Both removed.
+    plu: ["4796", "4797", "4803"],
     commonAliases: ["cherry tomato", "cherry tomatoes", "grape tomato"],
     quickStatsCommodity: "TOMATOES",
     epaSiteCodes: ["110050106"],
@@ -117,7 +148,12 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "lettuce-leaf",
     cropName: "Leaf Lettuce",
-    plu: ["4562", "4564"],
+    // 4076 Green Leaf Lettuce and 4075 Red Leaf Lettuce confirmed live
+    // against plufinder.com — these are the correct codes for this crop.
+    // 4562 and 4564 were previously (incorrectly) listed here too —
+    // re-verified live against plufinder.com and both actually resolve to
+    // "Carrots," not any lettuce; removed.
+    plu: ["4076", "4075"],
     commonAliases: ["leaf lettuce", "green leaf lettuce", "red leaf lettuce"],
     // Same NASS commodity as lettuce-head — Ag Chemical Use doesn't split
     // leaf vs. head, so both crops' chemicalUse will show identical figures.
@@ -156,7 +192,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "pineapple",
     cropName: "Pineapple",
-    plu: ["4430"],
+    // 3379 Mini/Baby Pineapple and 3380 Perola (golden-skin) Pineapple
+    // confirmed live against plufinder.com — both Ananas comosus, same
+    // commodity as existing 4430.
+    plu: ["4430", "3379", "3380"],
     commonAliases: ["pineapple", "pineapples"],
     // Same situation as tomatillo — verified live, NASS has no Ag Chemical
     // Use data for pineapple; chemicalUse will always be null.
@@ -168,7 +207,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "sweet-corn",
     cropName: "Sweet Corn",
-    plu: ["4077"],
+    // 4078 Sweet Corn, Yellow confirmed live against plufinder.com (same
+    // Zea mays sweet-corn commodity as existing 4077, White). Ornamental/
+    // Indian corn PLUs (3085/3086) were considered but NOT added — those are
+    // decorative field-corn products, not sweet corn.
+    plu: ["4077", "4078"],
     commonAliases: ["sweet corn", "corn", "corn on the cob"],
     // NASS distinguishes "CORN" (field/grain corn) from "SWEET CORN" — the
     // plain "CORN" query returns mostly irrelevant field-corn data, and
@@ -183,6 +226,10 @@ export const CROP_SEED: CropSourceMapping[] = [
     cropName: "Almonds",
     // PLU still needs confirmation (see below) — 4030 is a placeholder, not
     // independently verified like the other three fields on this crop.
+    // 4925 was also checked live against plufinder.com as a candidate
+    // second code, but its page (like 4924's) doesn't specify raw whole/
+    // shelled vs. a processed form — same unconfirmed status as 4924, so
+    // not added.
     plu: ["4924"],
     commonAliases: ["almond", "almonds"],
     quickStatsCommodity: "ALMONDS",
@@ -222,7 +269,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "banana",
     cropName: "Bananas",
-    plu: ["4011"],
+    // 4234 Baby (Nino/Lady Finger) Banana, 4229 Burro Banana, and 4230
+    // Dominique Banana confirmed live against plufinder.com — all Musa
+    // cultivars marketed simply as bananas, not plantains.
+    plu: ["4011", "4234", "4229", "4230"],
     commonAliases: ["banana", "bananas"],
     quickStatsCommodity: "BANANAS",
     epaSiteCodes: ["060020106"],
@@ -237,7 +287,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "grape",
     cropName: "Grapes",
-    plu: ["4022", "4023"], // green/white seedless, red seedless
+    // 3531 Black Seedless and 3501 IFG Novelty Green Seedless (Cotton
+    // Candy(R)) confirmed live against plufinder.com — both Vitis vinifera
+    // table-grape cultivars.
+    plu: ["4022", "4023", "3531", "3501"], // green/white seedless, red seedless, black seedless, cotton-candy green seedless
     commonAliases: ["grape", "grapes", "table grapes", "red grapes", "green grapes"],
     quickStatsCommodity: "GRAPES",
     epaSiteCodes: ["010140106"],
@@ -248,7 +301,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "strawberry",
     cropName: "Strawberries",
-    plu: ["4247"],
+    // 4248 confirmed live against plufinder.com as an alternate
+    // conventional code for the same garden strawberry commodity (quart
+    // package size), distinct from existing 4247.
+    plu: ["4247", "4248"],
     commonAliases: ["strawberry", "strawberries"],
     quickStatsCommodity: "STRAWBERRIES",
     epaSiteCodes: ["010160106"],
@@ -263,7 +319,9 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "carrot",
     cropName: "Carrots",
-    plu: ["4565"],
+    // 4560 Baby Carrots and 3424 Purple/Red Beta Sweet Carrot confirmed live
+    // against plufinder.com (same Daucus carota commodity as existing 4565).
+    plu: ["4565", "4560", "3424"],
     commonAliases: ["carrot", "carrots", "baby carrots"],
     quickStatsCommodity: "CARROTS",
     epaSiteCodes: ["140030106"],
@@ -274,7 +332,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "broccoli",
     cropName: "Broccoli",
-    plu: ["4060"],
+    // 4079 (an alternate conventional/Calabrese code for the same commodity
+    // as existing 4060) and 3277 Baby Broccoli (confirmed live: same species,
+    // Brassica oleracea, an earlier harvest stage — not broccolini, which is
+    // a different hybrid species) confirmed live against plufinder.com.
+    plu: ["4060", "4079", "3277"],
     commonAliases: ["broccoli", "broccoli crown", "broccoli florets"],
     quickStatsCommodity: "BROCCOLI",
     epaSiteCodes: ["130050106"],
@@ -285,7 +347,9 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "bell-pepper",
     cropName: "Bell Peppers",
-    plu: ["4065", "4688"], // green (field grown), red (greenhouse)
+    // 4689 Bell Pepper - Yellow (greenhouse) and 4682 Bell Pepper - Orange
+    // (field grown) confirmed live against plufinder.com.
+    plu: ["4065", "4688", "4689", "4682"], // green (field grown), red (greenhouse), yellow (greenhouse), orange (field grown)
     commonAliases: ["bell pepper", "bell peppers", "sweet pepper", "green pepper", "red pepper"],
     // NASS's Ag Chemical Use survey doesn't split pepper types the way
     // EPA/PDP do — "PEPPERS" is the broadest commodity_desc available, so
@@ -330,7 +394,9 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "peach",
     cropName: "Peaches",
-    plu: ["4044"],
+    // 4038 Yellow Flesh Peach and 4401 White Flesh Peach confirmed live
+    // against plufinder.com.
+    plu: ["4044", "4038", "4401"],
     commonAliases: ["peach", "peaches"],
     quickStatsCommodity: "PEACHES",
     epaSiteCodes: ["050040106"],
@@ -341,6 +407,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "cauliflower",
     cropName: "Cauliflower",
+    // Purple/green/orange (Romanesco-adjacent) cauliflower colors were
+    // searched for on plufinder.com but no distinct live-confirmed PLU
+    // turned up separate from this generic "all sizes" code — same
+    // unconfirmed status as almond's PLU, so nothing added here.
     plu: ["4571"],
     commonAliases: ["cauliflower"],
     quickStatsCommodity: "CAULIFLOWER",
@@ -352,6 +422,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "celery",
     cropName: "Celery",
+    // PLU 3321 ("Celery Root/Celeriac with leaves attached") was checked
+    // live on plufinder.com and NOT added — celeriac is grown/sold for its
+    // root, a different retail product from stalk celery even though it
+    // shares the same botanical species, closer to the "different item"
+    // case than the "genuine variety" case per this file's own standard.
     plu: ["4578"],
     commonAliases: ["celery", "celery stalks"],
     quickStatsCommodity: "CELERY",
@@ -366,7 +441,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "watermelon",
     cropName: "Watermelon",
-    plu: ["4032"],
+    // 4331 (Sugarbaby/Mickey Lee), 3421 (Mini Seedless), 3494 (Yellow Mini
+    // Seedless), and 4341 (Yellow Seedless) confirmed live against
+    // plufinder.com — all Citrullus lanatus, same commodity as existing
+    // 4032 (Red Seedless).
+    plu: ["4032", "4331", "3421", "3494", "4341"],
     commonAliases: ["watermelon"],
     // NASS's Ag Chemical Use survey doesn't separate melon types — "MELONS"
     // is the only commodity_desc available, so this crop's chemicalUse
@@ -382,7 +461,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "mushroom",
     cropName: "Mushrooms",
-    plu: ["4645"],
+    // 4650 Portabella (a mature form of the same Agaricus bisporus species
+    // as existing 4645 button mushroom) and 4648 Cremini/Brown/Swiss Brown
+    // (also Agaricus bisporus, an intermediate maturity stage) confirmed
+    // live against plufinder.com.
+    plu: ["4645", "4650", "4648"],
     commonAliases: ["mushroom", "mushrooms", "button mushroom", "white mushroom"],
     // chemicalUse will be null: NASS Quick Stats returns HTTP 400 for
     // MUSHROOMS — no domestic Ag Chemical Use survey exists, same class of
@@ -401,7 +484,12 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "cantaloupe",
     cropName: "Cantaloupe",
-    plu: ["4319"],
+    // 4050 Cantaloupe/Rockmelon confirmed live against plufinder.com as an
+    // alternate conventional code for the same commodity as existing 4319.
+    // Galia and Charentais melon codes were considered but NOT added — both
+    // are distinct commercial melon types from cantaloupe/muskmelon, not a
+    // variety of it.
+    plu: ["4319", "4050"],
     commonAliases: ["cantaloupe", "muskmelon", "rockmelon"],
     // See watermelon's note — NASS doesn't split melon types, so this
     // shares the "MELONS" commodity_desc with watermelon above.
@@ -430,7 +518,12 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "kiwi",
     cropName: "Kiwi",
-    plu: ["4030"],
+    // 3517 Gold Kiwi confirmed live against plufinder.com. Note: gold kiwi
+    // is technically Actinidia chinensis vs. green kiwi's Actinidia
+    // deliciosa — different species botanically, but sold and tracked
+    // commercially as one "kiwifruit" commodity (NASS's quickStatsCommodity
+    // below doesn't split them), so treated as a variety of this crop.
+    plu: ["4030", "3517"],
     commonAliases: ["kiwi", "kiwifruit", "kiwi fruit"],
     quickStatsCommodity: "KIWIFRUIT",
     epaSiteCodes: ["060180101"],
@@ -442,7 +535,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "plum",
     cropName: "Plums",
-    plu: ["4040"],
+    // 4039 (an alternate code for the same "Black Plums" group as existing
+    // 4040) and 4042 (Red plums, e.g. Santa Rosa) confirmed live against
+    // plufinder.com.
+    plu: ["4040", "4039", "4042"],
     commonAliases: ["plum", "plums"],
     quickStatsCommodity: "PLUMS",
     epaSiteCodes: ["050050106"],
@@ -453,7 +549,11 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "pear",
     cropName: "Pears",
-    plu: ["3015"],
+    // 4024 Bartlett/Williams, 4413 Bosc, 4025 Anjou, and 4417 Red Anjou
+    // confirmed live against plufinder.com. (Existing 3015 is specifically
+    // "Clara Friis" winter/Danish pears per the same source — a real but
+    // less common variety than these.)
+    plu: ["3015", "4024", "4413", "4025", "4417"],
     commonAliases: ["pear", "pears"],
     quickStatsCommodity: "PEARS",
     epaSiteCodes: ["040030106"],
@@ -464,7 +564,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "zucchini",
     cropName: "Zucchini",
-    plu: ["4067"],
+    // 4086 Yellow Zucchini (Golden Zucchini/Yellow Crookneck) confirmed live
+    // against plufinder.com — same Cucurbita pepo commodity as existing
+    // 4067, different color/shape.
+    plu: ["4067", "4086"],
     commonAliases: ["zucchini", "courgette", "summer squash"],
     // NASS's Ag Chemical Use survey doesn't split summer/winter squash or
     // zucchini specifically — "SQUASH" is the only commodity_desc
@@ -479,7 +582,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "green-bean",
     cropName: "Green Beans",
-    plu: ["4066"],
+    // 4533 Wax/Yellow Bean and 3049 Fine (French-style) Green Bean confirmed
+    // live against plufinder.com — both Phaseolus vulgaris, same succulent-
+    // bean commodity as existing 4066.
+    plu: ["4066", "4533", "3049"],
     commonAliases: ["green bean", "green beans", "string beans", "snap beans"],
     // "BEANS" is the only relevant commodity_desc NASS exposes — it isn't
     // split by bean type the way EPA's site vocabulary (BEANS (SUCCULENT),
@@ -538,7 +644,14 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "tomato",
     cropName: "Tomatoes",
-    plu: ["4664"],
+    // 3061 Beefsteak Tomato and 3282 Tomato (Roma/Plum/Italian/Saladette, On
+    // the Vine) confirmed live against plufinder.com. Note: the more
+    // "standard" 4-digit Roma code, 4087, was NOT added here even though
+    // it's a genuine Roma-tomato PLU — plufinder.com shows it's already
+    // (incorrectly) claimed by the tomato-cherry entry above, and the
+    // PLU-uniqueness invariant means it can't be assigned to two crops; see
+    // the flag on tomato-cherry's entry.
+    plu: ["4664", "3061", "3282"],
     commonAliases: ["tomato", "tomatoes", "vine tomato", "beefsteak tomato"],
     quickStatsCommodity: "TOMATOES",
     epaSiteCodes: ["110050106"],
@@ -549,7 +662,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "eggplant",
     cropName: "Eggplant",
-    plu: ["4081"],
+    // 4601 Japanese Eggplant and 4602 White Eggplant confirmed live against
+    // plufinder.com — both Solanum melongena, same commodity as existing
+    // 4081, different shape/color.
+    plu: ["4081", "4601", "4602"],
     commonAliases: ["eggplant", "aubergine"],
     // chemicalUse resolves, but from a 2010 survey year — expect
     // dataAgeWarning: true. NASS hasn't run an Ag Chemical Use survey for
@@ -563,7 +679,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "tangerine",
     cropName: "Tangerines",
-    plu: ["4457"],
+    // 4450 Clementine and 3389 Satsuma confirmed live against plufinder.com
+    // — both listed under plufinder's own "Tangerines/Mandarins" category
+    // alongside existing 4457, matching this crop's "mandarin" alias.
+    plu: ["4457", "4450", "3389"],
     commonAliases: ["tangerine", "tangerines", "mandarin", "mandarin orange"],
     quickStatsCommodity: "TANGERINES",
     epaSiteCodes: ["020080107"],
@@ -577,7 +696,12 @@ export const CROP_SEED: CropSourceMapping[] = [
     // Butternut specifically (4759) — there's no single unambiguous
     // "winter squash, any variety" PLU the way there is for zucchini;
     // butternut is the most commonly purchased winter squash variety.
-    plu: ["4759"],
+    // 4750 Acorn/Table Queen Squash and 4776 Vegetable Spaghetti (Spaghetti
+    // Squash) confirmed live against plufinder.com — both fall under the
+    // same generic "SQUASH" NASS/PDP bucket as butternut (see note above),
+    // so treated as additional varieties of this crop rather than separate
+    // items.
+    plu: ["4759", "4750", "4776"],
     commonAliases: ["winter squash", "butternut squash", "squash"],
     // Same "SQUASH" commodity_desc as zucchini — see zucchini's note above.
     quickStatsCommodity: "SQUASH",
@@ -605,7 +729,10 @@ export const CROP_SEED: CropSourceMapping[] = [
   {
     cropId: "radish",
     cropName: "Radishes",
-    plu: ["4740"],
+    // 4089 (French Breakfast/Cherry Belle, bunched red) and 4598 (a broader
+    // code plufinder.com lists as covering red/white/black/daikon radish)
+    // confirmed live against plufinder.com — all Raphanus sativus.
+    plu: ["4740", "4089", "4598"],
     commonAliases: ["radish", "radishes"],
     // chemicalUse resolves, but from a 2000 survey year (only 4 active
     // ingredients reported) — expect dataAgeWarning: true. The oldest
