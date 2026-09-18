@@ -254,7 +254,6 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
           )}
         </View>
 
-        <AdBanner placement="produceDetail" />
         {/* --- Persistent source/date footer --- */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Data current as of {formatDate(crop.lastUpdated)}</Text>
@@ -266,6 +265,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
         </View>
 
       </ScrollView>
+      <AdBanner placement="produceDetail" />
     </ScreenBackground>
   );
 }

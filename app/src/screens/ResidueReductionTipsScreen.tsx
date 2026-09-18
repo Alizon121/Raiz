@@ -28,9 +28,8 @@ export default function ResidueReductionTipsScreen({ route }: Props) {
             </Text>
           ))}
         </View>
-
-        <AdBanner placement="residue" />
       </ScrollView>
+      <AdBanner placement="residue" />
     </ScreenBackground>
   );
 }

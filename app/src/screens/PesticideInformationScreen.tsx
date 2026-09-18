@@ -1,10 +1,29 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useHeaderHeight } from "@react-navigation/elements";
 import type { ReactNode } from "react";
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+    LayoutAnimation,
+    Linking,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    UIManager,
+    View,
+} from "react-native";
+import AdBanner from "../components/AdBanner";
 import ScreenBackground from "../components/ScreenBackground";
 import { findingsNearTolerance } from "../utils/chemicalProfile";
 import type { ChemicalUse, RegisteredProducts, ResidueData } from "../types/crop";
 import { colors, radii, spacing, typography } from "../theme";
+
+// The old (non-Fabric) Android renderer required this opt-in per-process;
+// harmless no-op on iOS and on the new architecture, where it's on by default.
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // Reachable from both the Scan tab and the History tab — see the comment on
 // HistoryStackParamList — so this is typed against just the params it
@@ -20,16 +39,34 @@ type Props = {
     };
 };
 
-function SectionLabel({ children }: { children: ReactNode }) {
-    return <Text style={styles.sectionLabel}>{children}</Text>;
-}
-
 function SourceCaption({ children }: { children: ReactNode }) {
     return <Text style={styles.sourceCaption}>{children}</Text>;
 }
 
 function EmptySection({ text }: { text: string }) {
     return <Text style={styles.emptyText}>{text}</Text>;
+}
+
+// Collapsed by default so the screen opens as a short, scannable list of
+// section titles rather than every chemical/product/finding table at once —
+// tapping a header reveals that section's detail.
+function AccordionSection({ title, children }: { title: string; children: ReactNode }) {
+    const [expanded, setExpanded] = useState(false);
+
+    function toggle() {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setExpanded((prev) => !prev);
+    }
+
+    return (
+        <View style={styles.section}>
+            <TouchableOpacity style={styles.sectionHeader} onPress={toggle} activeOpacity={0.7}>
+                <Text style={styles.sectionLabel}>{title}</Text>
+                <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+            {expanded && <View style={styles.sectionBody}>{children}</View>}
+        </View>
+    );
 }
 
 export default function PesticideInformationScreen({ route }: Props) {
@@ -44,7 +81,7 @@ export default function PesticideInformationScreen({ route }: Props) {
             <Text style={styles.title}>Pesticide Information for {cropName}</Text>
 
             {/* --- Common pesticide active ingredients (USDA Ag Chemical Use) --- */}
-            <SectionLabel>Common Active Ingredients</SectionLabel>
+            <AccordionSection title="Common Active Ingredients">
             {chemicalUse ? (
                 <>
                     <SourceCaption>
@@ -74,9 +111,10 @@ export default function PesticideInformationScreen({ route }: Props) {
             ) : (
                 <EmptySection text="No USDA Ag Chemical Use data available for this crop yet." />
             )}
+            </AccordionSection>
 
             {/* --- Registered products/labels (EPA PPLS) --- */}
-            <SectionLabel>Registered Products</SectionLabel>
+            <AccordionSection title="Registered Products">
             {registeredProducts && registeredProducts.activeIngredients.length > 0 ? (
                 <>
                     <SourceCaption>EPA Pesticide Product Label System · as of {registeredProducts.sourceDate}</SourceCaption>
@@ -102,9 +140,10 @@ export default function PesticideInformationScreen({ route }: Props) {
             ) : (
                 <EmptySection text="No EPA registration data available for this crop yet." />
             )}
+            </AccordionSection>
 
             {/* --- Residue findings vs. legal tolerance (USDA/FDA PDP) --- */}
-            <SectionLabel>Residue Findings</SectionLabel>
+            <AccordionSection title="Residue Findings">
             {residueData && residueData.findings.length > 0 ? (
                 <>
                     <SourceCaption>
@@ -143,7 +182,9 @@ export default function PesticideInformationScreen({ route }: Props) {
             ) : (
                 <EmptySection text="No USDA/FDA residue testing data available for this crop yet." />
             )}
+            </AccordionSection>
         </ScrollView>
+        <AdBanner placement="pesticideInformation" />
         </ScreenBackground>
     );
 }
@@ -152,7 +193,15 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     title: { ...typography.h1, color: colors.textOnDark, marginBottom: spacing.md },
-    sectionLabel: { ...typography.h2, color: colors.textPrimary, marginTop: spacing.lg, marginBottom: spacing.xs },
+    section: { marginTop: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+    sectionHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingBottom: spacing.md,
+    },
+    sectionBody: { paddingBottom: spacing.md },
+    sectionLabel: { ...typography.h2, color: colors.textPrimary },
     sourceCaption: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
     warningText: { ...typography.caption, color: colors.danger, marginBottom: spacing.xs },
     emptyText: { ...typography.body, color: colors.textSecondary, fontStyle: "italic" },
