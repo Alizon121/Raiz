@@ -22,7 +22,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 DEVICE_NAME="${1:-iPhone 17 Pro}"
-BUNDLE_ID="com.raiz.app"
+# Must match app.config.js's ios.bundleIdentifier, NOT android.package
+# ("com.raiz.app") — they're different values. `simctl install` succeeds
+# either way (it reads the real ID from the built .app), but `simctl launch`
+# with the wrong one fails with FBSOpenApplicationServiceErrorDomain code 4.
+BUNDLE_ID="com.pesticideraiz.app"
 
 DEVICE_UDID=$(xcrun simctl list devices available -j \
   | python3 -c "
