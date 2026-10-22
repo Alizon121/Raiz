@@ -11,6 +11,7 @@ import type { HistoryStackParamList } from "../navigation/types";
 import { getScanHistory } from "../services/scanHistory";
 import type { ScanHistoryEntry } from "../types/scanHistory";
 import { colors, radii, spacing, typography } from "../theme";
+import { displayCropName, isOrganicPlu } from "../utils/plu";
 
 type Props = NativeStackScreenProps<HistoryStackParamList, "History">;
 type State = "loading" | "error" | ScanHistoryEntry[];
@@ -68,7 +69,7 @@ export default function HistoryScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.row}
-              onPress={() => navigation.navigate("ProduceDetail", { cropId: item.cropId })}
+              onPress={() => navigation.navigate("ProduceDetail", isOrganicPlu(item.plu) ? { cropId: item.cropId, organic: true } : { cropId: item.cropId })}
             >
               {item.imageUrl ? (
                 <Image source={{ uri: item.imageUrl }} style={styles.rowImage} />
@@ -78,7 +79,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 </View>
               )}
               <View style={styles.rowTextGroup}>
-                <Text style={styles.rowTitle}>{item.cropName}</Text>
+                <Text style={styles.rowTitle}>{displayCropName(item.cropName, isOrganicPlu(item.plu))}</Text>
                 <Text style={styles.rowMeta}>PLU {item.plu}</Text>
               </View>
               <Text style={styles.rowDate}>{formatDate(item.scannedAt)}</Text>

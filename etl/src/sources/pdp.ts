@@ -21,9 +21,16 @@ function pdpZipUrl(year: number): string {
   return `https://www.ams.usda.gov/sites/default/files/media/${year}PDPDatabase.zip`;
 }
 
+// Commodity Marketing Claim (Samples column 14): NC = no claim, PD = no
+// pesticides detected, PO = organic, PP = pesticide free. Only PO is
+// certified organic; PD/PP are self-declared labels, so they are kept in the
+// conventional pool (see isOrganicClaim) rather than being treated as organic.
+export const PDP_ORGANIC_CLAIM = "PO";
+
 interface SampleRow {
   samplePk: string;
   commod: string;
+  claim: string; // "" when the column is absent
 }
 
 interface ResultRow {
@@ -59,7 +66,7 @@ function parseSamples(text: string): SampleRow[] {
   for (const line of text.split(/\r?\n/)) {
     if (!line) continue;
     const f = line.split("|");
-    rows.push({ samplePk: f[0], commod: f[6] });
+    rows.push({ samplePk: f[0], commod: f[6], claim: (f[13] ?? "").trim() });
   }
   return rows;
 }
@@ -172,16 +179,22 @@ function median(values: number[]): number {
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-/**
- * Pure, single-year build — kept separate from the multi-year fallback
- * orchestrator (below) so it stays simple to unit test with a hand-built
- * fixture dataset, no network involved.
- */
-export function buildResidueDataForYear(crop: CropSourceMapping, dataset: PdpDataset, year: number): ResidueData | null {
-  const commodSet = new Set(crop.pdpCommodityCodes);
-  const samplePks = new Set(dataset.samples.filter((s) => commodSet.has(s.commod)).map((s) => s.samplePk));
-  if (samplePks.size === 0) return null;
+const CUMULATIVE_EXPOSURE_NOTE =
+  "Multiple pesticides are frequently detected on the same sample. PDP and EPA tolerances are set " +
+  "per individual chemical; combined/cumulative exposure across multiple residues on one item is not " +
+  "well characterized by this data and is not represented here.";
 
+function isOrganicClaim(claim: string): boolean {
+  return claim === PDP_ORGANIC_CLAIM;
+}
+
+/** Findings + sample size for one pool of samples (conventional or organic). */
+function buildFindings(
+  crop: CropSourceMapping,
+  dataset: PdpDataset,
+  samplePks: Set<string>,
+  commodSet: Set<string>,
+): ResidueFinding[] {
   const resultsForCrop = dataset.results.filter((r) => samplePks.has(r.samplePk) && commodSet.has(r.commod));
 
   const byPest = new Map<string, ResultRow[]>();
@@ -210,38 +223,90 @@ export function buildResidueDataForYear(crop: CropSourceMapping, dataset: PdpDat
   }
 
   findings.sort((a, b) => b.percentSamplesDetected - a.percentSamplesDetected);
+  return findings;
+}
 
+type SamplePool = "conventional" | "organic";
+
+interface PoolResult {
+  sourceYear: number;
+  sampleSize: number;
+  findings: ResidueFinding[];
+  dataAgeWarning: boolean;
+}
+
+/**
+ * One year's stats for one pool of samples: "organic" is claim PO only,
+ * "conventional" is every other claim. Returns null when that pool has no
+ * samples for the crop that year, which is what lets each pool fall back to
+ * an older year independently.
+ */
+function buildPoolForYear(crop: CropSourceMapping, dataset: PdpDataset, year: number, pool: SamplePool): PoolResult | null {
+  const commodSet = new Set(crop.pdpCommodityCodes);
+  const wantOrganic = pool === "organic";
+  const samplePks = new Set(
+    dataset.samples.filter((s) => commodSet.has(s.commod) && isOrganicClaim(s.claim) === wantOrganic).map((s) => s.samplePk),
+  );
+  if (samplePks.size === 0) return null;
   return {
     sourceYear: year,
     sampleSize: samplePks.size,
-    findings,
+    findings: buildFindings(crop, dataset, samplePks, commodSet),
     dataAgeWarning: new Date().getFullYear() - year > PDP_DATA_AGE_WARNING_YEARS,
-    cumulativeExposureNote:
-      "Multiple pesticides are frequently detected on the same sample. PDP and EPA tolerances are set " +
-      "per individual chemical; combined/cumulative exposure across multiple residues on one item is not " +
-      "well characterized by this data and is not represented here.",
+  };
+}
+
+function assembleResidueData(conventional: PoolResult | null, organic: PoolResult | null): ResidueData | null {
+  const base = conventional ?? organic;
+  if (!base) return null;
+  return {
+    sourceYear: base.sourceYear,
+    // No conventional samples in the window: leave this side empty rather than
+    // presenting organic (or another pool's) numbers as conventional.
+    sampleSize: conventional?.sampleSize ?? 0,
+    findings: conventional?.findings ?? [],
+    dataAgeWarning: base.dataAgeWarning,
+    cumulativeExposureNote: CUMULATIVE_EXPOSURE_NOTE,
+    organic: organic,
   };
 }
 
 /**
- * Walks backward from PDP_LATEST_YEAR, trying each year's dataset in turn,
- * until one actually tested this crop (has sample data for its commodity
- * codes) or PDP_MAX_FALLBACK_YEARS is exhausted. Returns null only if the
- * crop wasn't tested in any of those years — same "no data yet" meaning as
- * before, just checked across more years instead of one.
+ * Pure, single-year build — kept separate from the multi-year fallback
+ * orchestrator (below) so it stays simple to unit test with a hand-built
+ * fixture dataset, no network involved. Both pools come from this one year;
+ * buildResidueData is what lets them resolve to different years.
+ */
+export function buildResidueDataForYear(crop: CropSourceMapping, dataset: PdpDataset, year: number): ResidueData | null {
+  return assembleResidueData(
+    buildPoolForYear(crop, dataset, year, "conventional"),
+    buildPoolForYear(crop, dataset, year, "organic"),
+  );
+}
+
+/**
+ * Walks backward from PDP_LATEST_YEAR, once per pool. The conventional stats
+ * come from the newest year with conventional samples for this crop, and the
+ * organic block from the newest year with organic (PO) samples — these can
+ * be different years, and each side carries its own sourceYear so the app can
+ * say so. Neither pool ever borrows the other's data. Returns null only if
+ * neither was found within PDP_MAX_FALLBACK_YEARS.
  *
- * `loadYear` defaults to the real network-backed loader; tests inject a
- * fixture-returning stub instead of mocking zip downloads.
+ * Years are loaded lazily and only until both pools are resolved; the
+ * default loader caches per year, so the second pool's walk costs no extra
+ * downloads. `loadYear` is injectable so tests don't mock zip downloads.
  */
 export async function buildResidueData(
   crop: CropSourceMapping,
   loadYear: (year: number) => Promise<PdpDataset> = loadPdpDatasetForYear,
 ): Promise<ResidueData | null> {
-  for (let i = 0; i < PDP_MAX_FALLBACK_YEARS; i++) {
+  let conventional: PoolResult | null = null;
+  let organic: PoolResult | null = null;
+  for (let i = 0; i < PDP_MAX_FALLBACK_YEARS && (!conventional || !organic); i++) {
     const year = PDP_LATEST_YEAR - i;
     const dataset = await loadYear(year);
-    const result = buildResidueDataForYear(crop, dataset, year);
-    if (result) return result;
+    conventional ??= buildPoolForYear(crop, dataset, year, "conventional");
+    organic ??= buildPoolForYear(crop, dataset, year, "organic");
   }
-  return null;
+  return assembleResidueData(conventional, organic);
 }

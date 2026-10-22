@@ -54,6 +54,18 @@ describe("lookupCropByPlu", () => {
     expect(result).toBeNull();
   });
 
+  test("falls back to an organicPlu query when no crop has the code as a conventional PLU", async () => {
+    mockGetDocs
+      .mockResolvedValueOnce({ empty: true, docs: [] })
+      .mockResolvedValueOnce({ empty: false, docs: [{ id: "apple", data: () => RAW_APPLE_DOC }] });
+
+    const result = await lookupCropByPlu("94131");
+
+    expect(mockWhere).toHaveBeenCalledWith("plu", "array-contains", "94131");
+    expect(mockWhere).toHaveBeenCalledWith("organicPlu", "array-contains", "94131");
+    expect(result!.cropId).toBe("apple");
+  });
+
   test("maps the matched doc into a Crop, including the doc ID and a converted Date", async () => {
     mockGetDocs.mockResolvedValue({
       empty: false,
@@ -66,6 +78,8 @@ describe("lookupCropByPlu", () => {
       cropId: "apple",
       cropName: "Apples",
       plu: ["4131", "4130"],
+      organicPlu: [], // absent on older docs, defaulted
+      organicImageUrl: null,
       commonAliases: ["apple"],
       chemicalUse: null,
       registeredProducts: null,
@@ -135,13 +149,13 @@ describe("getAllKnownPlus", () => {
   test("flattens PLU codes across every crop doc into one Set, and caches across calls", async () => {
     mockGetDocs.mockResolvedValue({
       docs: [
-        { data: () => ({ plu: ["4131", "4130"] }) },
+        { data: () => ({ plu: ["4131", "4130"], organicPlu: ["94131", "94130"] }) },
         { data: () => ({ plu: ["4072"] }) },
       ],
     });
 
     const first = await getAllKnownPlus();
-    expect(first).toEqual(new Set(["4131", "4130", "4072"]));
+    expect(first).toEqual(new Set(["4131", "4130", "94131", "94130", "4072"]));
 
     const second = await getAllKnownPlus();
     expect(second).toBe(first); // same Set instance — no re-fetch

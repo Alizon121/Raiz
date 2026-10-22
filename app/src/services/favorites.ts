@@ -6,20 +6,34 @@ function favoritesCollection(userId: string) {
   return collection(db, "users", userId, "favorites");
 }
 
-/** Keyed by cropId, so a crop can only be favorited once — re-favoriting is a no-op overwrite. */
+/**
+ * Conventional favorites keep the bare cropId as their doc ID (so existing
+ * favorites are untouched); the organic variant gets a suffix, which makes
+ * organic and conventional two independent favorites of the same crop.
+ */
+export function favoriteDocId(cropId: string, organic: boolean): string {
+  return organic ? `${cropId}__organic` : cropId;
+}
+
+/** Re-favoriting the same crop + variant is a no-op overwrite. */
 export async function addFavorite(
   userId: string,
-  entry: { cropId: string; cropName: string; imageUrl: string | null },
+  entry: { cropId: string; cropName: string; imageUrl: string | null; organic?: boolean },
 ): Promise<void> {
-  await setDoc(doc(favoritesCollection(userId), entry.cropId), { ...entry, favoritedAt: serverTimestamp() });
+  const organic = entry.organic ?? false;
+  await setDoc(doc(favoritesCollection(userId), favoriteDocId(entry.cropId, organic)), {
+    ...entry,
+    organic,
+    favoritedAt: serverTimestamp(),
+  });
 }
 
-export async function removeFavorite(userId: string, cropId: string): Promise<void> {
-  await deleteDoc(doc(favoritesCollection(userId), cropId));
+export async function removeFavorite(userId: string, cropId: string, organic = false): Promise<void> {
+  await deleteDoc(doc(favoritesCollection(userId), favoriteDocId(cropId, organic)));
 }
 
-export async function isFavorited(userId: string, cropId: string): Promise<boolean> {
-  const snap = await getDoc(doc(favoritesCollection(userId), cropId));
+export async function isFavorited(userId: string, cropId: string, organic = false): Promise<boolean> {
+  const snap = await getDoc(doc(favoritesCollection(userId), favoriteDocId(cropId, organic)));
   return snap.exists();
 }
 
@@ -32,6 +46,7 @@ export async function getFavorites(userId: string): Promise<FavoriteEntry[]> {
       cropId: string;
       cropName: string;
       imageUrl: string | null | undefined;
+      organic: boolean | undefined;
       favoritedAt: Timestamp | null;
     };
     return {
@@ -39,6 +54,7 @@ export async function getFavorites(userId: string): Promise<FavoriteEntry[]> {
       cropId: data.cropId,
       cropName: data.cropName,
       imageUrl: data.imageUrl ?? null,
+      organic: data.organic ?? false, // docs saved before organic favorites existed
       // favoritedAt can briefly be null: serverTimestamp() resolves once the
       // write reaches the server, mirroring getScanHistory's same handling.
       favoritedAt: data.favoritedAt ? data.favoritedAt.toDate() : new Date(),

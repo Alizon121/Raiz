@@ -10,6 +10,7 @@ import { lookupCropByPlu } from "../services/cropLookup";
 import { addScanHistoryEntry } from "../services/scanHistory";
 import type { ScanStackParamList } from "../navigation/types";
 import type { Crop } from "../types/crop";
+import { displayCropName, isOrganicPlu } from "../utils/plu";
 import { colors, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<ScanStackParamList, "ScanConfirm">;
@@ -75,7 +76,7 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
     <ScreenBackground style={[styles.center, { paddingTop: headerHeight }]}>
       <Text style={styles.readAs}>We read</Text>
       <Text style={styles.pluCode}>{plu}</Text>
-      <Text style={styles.title}>{crop.cropName}</Text>
+      <Text style={styles.title}>{displayCropName(crop.cropName, isOrganicPlu(plu))}</Text>
       <Text style={styles.body}>Is that right?</Text>
       <Button
         label="Yes, that's right"
@@ -83,10 +84,15 @@ export default function ScanConfirmScreen({ route, navigation }: Props) {
           // Fire-and-forget: history is a nice-to-have log, not something
           // that should block or fail the user's actual navigation forward.
           if (user)
-            addScanHistoryEntry(user.uid, { cropId: crop.cropId, cropName: crop.cropName, plu, imageUrl: crop.imageUrl }).catch(
+            addScanHistoryEntry(user.uid, {
+              cropId: crop.cropId,
+              cropName: crop.cropName,
+              plu,
+              imageUrl: isOrganicPlu(plu) ? (crop.organicImageUrl ?? crop.imageUrl) : crop.imageUrl,
+            }).catch(
               () => {},
             );
-          navigation.replace("ProduceDetail", { cropId: crop.cropId });
+          navigation.replace("ProduceDetail", isOrganicPlu(plu) ? { cropId: crop.cropId, organic: true } : { cropId: crop.cropId });
         }}
         style={styles.button}
       />

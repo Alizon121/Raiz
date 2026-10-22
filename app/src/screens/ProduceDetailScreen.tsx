@@ -11,7 +11,8 @@ import ScreenBackground from "../components/ScreenBackground";
 import { getCropById } from "../services/cropLookup";
 import { addFavorite, isFavorited, removeFavorite } from "../services/favorites";
 import { deleteScanHistoryEntry } from "../services/scanHistory";
-import { countActiveIngredientsByCategory, findingsNearTolerance, percentOfTolerance } from "../utils/chemicalProfile";
+import { countActiveIngredientsByCategory, findingsNearTolerance, percentOfTolerance, selectResiduePool } from "../utils/chemicalProfile";
+import { displayCropName } from "../utils/plu";
 import type { ActiveIngredientUse, Crop } from "../types/crop";
 import { colors, radii, spacing, typography } from "../theme";
 
@@ -28,7 +29,7 @@ const CATEGORY_LABELS: Record<ActiveIngredientUse["category"], string> = {
 // "ResidueReductionTips" (present in both) and calls goBack() otherwise.
 type Props = {
   navigation: NavigationProp<ParamListBase>;
-  route: { params: { cropId: string } };
+  route: { params: { cropId: string; organic?: boolean } };
 };
 
 const SOURCE_LINKS = [
@@ -43,7 +44,7 @@ function formatDate(date: Date): string {
 
 export default function ProduceDetailScreen({ route, navigation }: Props) {
   const headerHeight = useHeaderHeight();
-  const { cropId } = route.params;
+  const { cropId, organic: scannedAsOrganic = false } = route.params;
   const { user } = useAuth();
   const [crop, setCrop] = useState<Crop | null | "loading" | "error">("loading");
   const [showSummaryInfo, setShowSummaryInfo] = useState(false);
@@ -85,13 +86,13 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    isFavorited(user.uid, cropId)
+    isFavorited(user.uid, cropId, scannedAsOrganic)
       .then((result) => !cancelled && setFavorited(result))
       .catch(() => { });
     return () => {
       cancelled = true;
     };
-  }, [user, cropId]);
+  }, [user, cropId, scannedAsOrganic]);
 
   function handleToggleFavorite(cropName: string, imageUrl: string | null) {
     if (!user || togglingFavorite) return;
@@ -100,8 +101,8 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
     // Optimistic — flip immediately, roll back if the write fails.
     setFavorited(!wasFavorited);
     const request = wasFavorited
-      ? removeFavorite(user.uid, cropId)
-      : addFavorite(user.uid, { cropId, cropName, imageUrl });
+      ? removeFavorite(user.uid, cropId, scannedAsOrganic)
+      : addFavorite(user.uid, { cropId, cropName, imageUrl, organic: scannedAsOrganic });
     request
       .catch(() => setFavorited(wasFavorited))
       .finally(() => setTogglingFavorite(false));
@@ -137,19 +138,29 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
   const categoryEntries = (Object.keys(CATEGORY_LABELS) as (keyof typeof CATEGORY_LABELS)[])
     .map((category) => ({ category, count: categoryCounts[category] }))
     .filter(({ count }) => count > 0);
-  const nearTolerance = findingsNearTolerance(residueData);
+  const pool = selectResiduePool(residueData, scannedAsOrganic);
+  const nearTolerance = findingsNearTolerance(pool);
+  const heroName = displayCropName(crop.cropName, scannedAsOrganic);
 
   return (
     <ScreenBackground>
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: headerHeight + spacing.lg }]}>
-        <Text style={styles.cropName}>{crop.cropName}</Text>
+        <Text style={styles.cropName}>{heroName}</Text>
+        {/* {scannedAsOrganic && (
+          <View style={styles.organicBadge}>
+            <Ionicons name="leaf-outline" size={16} color={colors.forestDark} />
+            <Text style={styles.organicBadgeText}>
+              Scanned as organic. Residue results below are for organic-labeled samples only.
+            </Text>
+          </View>
+        )} */}
 
         {/* Required on every result screen, not just onboarding: this is statistical/typical
           data for the crop type, not a lab test of the specific item scanned. */}
         <View style={styles.disclaimerBox}>
           <Ionicons name="information-circle-outline" size={18} color={colors.forest} />
           <Text style={styles.disclaimerText}>
-            This shows typical, statistical data for {crop.cropName.toLowerCase()} as a crop type, and NOT a lab test of
+            This shows typical, statistical data for {scannedAsOrganic ? "organic " + crop.cropName.toLowerCase() : crop.cropName.toLowerCase()} as a crop type, and NOT a lab test of
             the specific item you scanned.
           </Text>
         </View>
@@ -188,7 +199,21 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
             <Text style={styles.summaryEmptyText}>No chemical use data available yet for this crop.</Text>
           )}
 
-          {residueData && residueData.findings.length > 0 && (
+          {scannedAsOrganic && !pool && residueData && (
+            <Text style={styles.summaryEmptyText}>
+              No organic samples of this crop were found in the recent USDA/FDA testing years.
+            </Text>
+          )}
+
+          {pool && pool.findings.length === 0 && (
+            <Text style={styles.summaryEmptyText}>
+              {pool.sampleSize === 0
+                ? `No ${pool.label} pesticide residue findings are available for this crop.`
+                : `No pesticide residues were detected in ${pool.label} samples of this crop.`}
+            </Text>
+          )}
+
+          {pool && pool.findings.length > 0 && (
             nearTolerance.length > 0 ? (
               <View style={styles.cautionBox}>
                 <Ionicons name="alert-circle-outline" size={16} color={colors.caution} />
@@ -208,7 +233,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
           {residueReductionTips.length > 0 && (
             <TouchableOpacity
               style={styles.summaryLinkRow}
-              onPress={() => navigation.navigate("ResidueReductionTips", { cropName: crop.cropName, tips: residueReductionTips })}
+              onPress={() => navigation.navigate("ResidueReductionTips", scannedAsOrganic ? { cropName: heroName, tips: residueReductionTips, organic: true } : { cropName: crop.cropName, tips: residueReductionTips })}
             >
               <Text style={styles.summaryLinkText}>See tips to reduce residue</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.forest} />
@@ -218,7 +243,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
           {chemicalUse && (
             <TouchableOpacity
               style={styles.summaryLinkRow}
-              onPress={() => navigation.navigate("PesticideInformation", { cropName: crop.cropName, chemicalUse, registeredProducts, residueData })}
+              onPress={() => navigation.navigate("PesticideInformation", { cropName: heroName, chemicalUse, registeredProducts, residueData, scannedAsOrganic })}
             >
               <Text style={styles.summaryLinkText}>Detailed Pesticide Information</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.forest} />
@@ -228,7 +253,7 @@ export default function ProduceDetailScreen({ route, navigation }: Props) {
           {user && (
             <TouchableOpacity
               style={styles.summaryLinkRow}
-              onPress={() => handleToggleFavorite(crop.cropName, crop.imageUrl)}
+              onPress={() => handleToggleFavorite(crop.cropName, scannedAsOrganic ? (crop.organicImageUrl ?? crop.imageUrl) : crop.imageUrl)}
               disabled={togglingFavorite}
             >
               <Text style={favorited ? styles.removeText : styles.summaryLinkText}>
@@ -326,6 +351,16 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginTop: spacing.md,
   },
+  organicBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.white,
+    borderRadius: radii.md,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  organicBadgeText: { ...typography.caption, color: colors.forestDark, flex: 1 },
   clearText: { ...typography.caption, color: colors.forestDark, flex: 1 },
   summaryLinkRow: {
     flexDirection: "row",

@@ -91,3 +91,17 @@ test("does not fetch when there is no signed-in user", async () => {
   await renderScreen();
   expect(mockGetScanHistory).not.toHaveBeenCalled();
 });
+
+test("tapping a row scanned with an organic PLU reopens ProduceDetail as organic", async () => {
+  mockGetScanHistory.mockResolvedValue([
+    { id: "scan-1", cropId: "apple", cropName: "Apples", plu: "94131", scannedAt: new Date("2026-01-15T00:00:00Z") },
+  ]);
+  await renderScreen();
+
+  expect(screen.getByText("Organic Apples")).toBeTruthy();
+  await act(async () => {
+    fireEvent.press(screen.getByText("Organic Apples"));
+  });
+
+  expect(mockNavigate).toHaveBeenCalledWith("ProduceDetail", { cropId: "apple", organic: true });
+});

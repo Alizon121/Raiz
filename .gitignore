@@ -1,2 +1,3 @@
 # Editor settings (personal preference, not shared project config)
 .vscode/
+.DS_Store

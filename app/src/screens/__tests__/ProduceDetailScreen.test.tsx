@@ -67,11 +67,11 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-async function renderScreen(cropId = "apple") {
+async function renderScreen(cropId = "apple", organic?: boolean) {
   await act(async () => {
     render(
       <PremiumProvider>
-        <ProduceDetailScreen navigation={navigation} route={{ params: { cropId } } as never} />
+        <ProduceDetailScreen navigation={navigation} route={{ params: organic ? { cropId, organic } : { cropId } } as never} />
       </PremiumProvider>,
     );
   });
@@ -131,7 +131,24 @@ test("the at-a-glance card links to the Pesticide Information screen, passing th
     chemicalUse: FULL_CROP.chemicalUse,
     registeredProducts: FULL_CROP.registeredProducts,
     residueData: FULL_CROP.residueData,
+    scannedAsOrganic: false,
   });
+});
+
+test("when scanned as organic, shows a badge and passes scannedAsOrganic through to Pesticide Information", async () => {
+  mockGetCropById.mockResolvedValue(FULL_CROP);
+  await renderScreen("apple", true);
+  expect(screen.getByText(/Scanned as organic/)).toBeTruthy();
+  await act(async () => {
+    fireEvent.press(screen.getByText("Detailed Pesticide Information"));
+  });
+  expect(mockNavigate).toHaveBeenCalledWith("PesticideInformation", expect.objectContaining({ scannedAsOrganic: true }));
+});
+
+test("shows no organic badge for a conventional scan", async () => {
+  mockGetCropById.mockResolvedValue(FULL_CROP);
+  await renderScreen();
+  expect(screen.queryByText(/Scanned as organic/)).toBeNull();
 });
 
 test("omits the pesticide information link when the crop has no chemical use data", async () => {
@@ -221,4 +238,69 @@ test("footer shows the formatted last-updated date and source citation links", a
     fireEvent.press(screen.getByText("USDA NASS Quick Stats"));
   });
   expect(Linking.openURL).toHaveBeenCalledWith("https://quickstats.nass.usda.gov");
+});
+
+test("conventional scan with no conventional samples: says none are available, and never mentions organic data", async () => {
+  mockGetCropById.mockResolvedValue({
+    ...FULL_CROP,
+    residueData: { ...FULL_CROP.residueData!, sampleSize: 0, findings: [], organic: { sourceYear: 2024, dataAgeWarning: false, sampleSize: 5, findings: [] } },
+  });
+  await renderScreen();
+  expect(screen.getByText(/No conventional pesticide residue findings are available for this crop/)).toBeTruthy();
+  expect(screen.queryByText(/organic/i)).toBeNull();
+  expect(screen.queryByText(/No chemicals were found near their legal tolerance levels/)).toBeNull();
+});
+
+test("conventional samples tested with no detections: says none were detected instead of staying silent", async () => {
+  mockGetCropById.mockResolvedValue({ ...FULL_CROP, residueData: { ...FULL_CROP.residueData!, findings: [] } });
+  await renderScreen();
+  expect(screen.getByText(/No pesticide residues were detected in conventional samples of this crop/)).toBeTruthy();
+});
+
+test("organic scan: title reads 'Organic <crop>' and the summary uses only organic findings", async () => {
+  mockGetCropById.mockResolvedValue({
+    ...FULL_CROP,
+    residueData: {
+      ...FULL_CROP.residueData!,
+      organic: {
+        sourceYear: 2024,
+        dataAgeWarning: false,
+        sampleSize: 20,
+        findings: [{ chemical: "Boscalid", percentSamplesDetected: 20, medianConcentration: 9, legalTolerance: 10, toleranceNote: null, units: "ppm" }],
+      },
+    },
+  });
+  await renderScreen("apple", true);
+  expect(screen.getByText("Organic Apples")).toBeTruthy();
+  expect(screen.getByText(/Boscalid \(90%\)/)).toBeTruthy(); // organic finding drives the callout
+});
+
+test("organic scan with no organic samples: says so instead of falling back to conventional numbers", async () => {
+  mockGetCropById.mockResolvedValue({ ...FULL_CROP, residueData: { ...FULL_CROP.residueData!, organic: null } });
+  await renderScreen("apple", true);
+  expect(screen.getByText(/No organic samples of this crop were found/)).toBeTruthy();
+  expect(screen.queryByText(/No chemicals were found near their legal tolerance levels/)).toBeNull();
+});
+
+test("favoriting from an organic scan saves the organic variant, and checks the organic variant's state", async () => {
+  mockGetCropById.mockResolvedValue(FULL_CROP);
+  await renderScreen("apple", true);
+  expect(mockIsFavorited).toHaveBeenCalledWith("user-1", "apple", true);
+  await act(async () => {
+    fireEvent.press(screen.getByText("Add to Favorites"));
+  });
+  expect(mockAddFavorite).toHaveBeenCalledWith("user-1", expect.objectContaining({ cropId: "apple", organic: true }));
+});
+
+test("organic scan passes organic: true and the organic title to the tips screen", async () => {
+  mockGetCropById.mockResolvedValue(FULL_CROP);
+  await renderScreen("apple", true);
+  await act(async () => {
+    fireEvent.press(screen.getByText("See tips to reduce residue"));
+  });
+  expect(mockNavigate).toHaveBeenCalledWith("ResidueReductionTips", {
+    cropName: "Organic Apples",
+    tips: FULL_CROP.residueReductionTips,
+    organic: true,
+  });
 });

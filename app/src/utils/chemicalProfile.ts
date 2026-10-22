@@ -18,7 +18,7 @@ export function countActiveIngredientsByCategory(chemicalUse: ChemicalUse | null
 // the ceiling, look here first."
 export const NEAR_TOLERANCE_THRESHOLD = 0.75;
 
-export function findingsNearTolerance(residueData: ResidueData | null): ResidueFinding[] {
+export function findingsNearTolerance(residueData: Pick<ResidueData, "findings"> | null): ResidueFinding[] {
   if (!residueData) return [];
   return residueData.findings.filter(
     (f) => f.legalTolerance != null && f.legalTolerance > 0 && f.medianConcentration / f.legalTolerance >= NEAR_TOLERANCE_THRESHOLD,
@@ -29,4 +29,33 @@ export function findingsNearTolerance(residueData: ResidueData | null): ResidueF
 export function percentOfTolerance(finding: ResidueFinding): number | null {
   if (finding.legalTolerance == null || finding.legalTolerance <= 0) return null;
   return Math.round((finding.medianConcentration / finding.legalTolerance) * 100);
+}
+
+export interface ResiduePool {
+  label: "organic" | "conventional";
+  sourceYear: number;
+  sampleSize: number;
+  findings: ResidueFinding[];
+  dataAgeWarning: boolean;
+}
+
+/**
+ * The one residue pool a screen should show: organic-labeled samples for an
+ * organic scan, conventional otherwise. The two are never shown together, so
+ * a conventional number can't be mistaken for an organic one. null when
+ * there's no residue data, or (organic) no organic samples in the window.
+ */
+export function selectResiduePool(residueData: ResidueData | null, organic: boolean): ResiduePool | null {
+  if (!residueData) return null;
+  if (organic) {
+    const o = residueData.organic;
+    return o ? { label: "organic", sourceYear: o.sourceYear, sampleSize: o.sampleSize, findings: o.findings, dataAgeWarning: o.dataAgeWarning } : null;
+  }
+  return {
+    label: "conventional",
+    sourceYear: residueData.sourceYear,
+    sampleSize: residueData.sampleSize,
+    findings: residueData.findings,
+    dataAgeWarning: residueData.dataAgeWarning,
+  };
 }

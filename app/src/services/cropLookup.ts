@@ -9,12 +9,14 @@ function toCrop(cropId: string, data: Record<string, unknown>): Crop {
     cropId,
     cropName: raw.cropName,
     plu: raw.plu,
+    organicPlu: raw.organicPlu ?? [],
     commonAliases: raw.commonAliases,
     chemicalUse: raw.chemicalUse,
     registeredProducts: raw.registeredProducts,
     residueData: raw.residueData,
     residueReductionTips: raw.residueReductionTips,
     imageUrl: raw.imageUrl ?? null,
+    organicImageUrl: raw.organicImageUrl ?? null,
     lastUpdated: raw.lastUpdated.toDate(),
   };
 }
@@ -26,8 +28,13 @@ function toCrop(cropId: string, data: Record<string, unknown>): Crop {
  * array-contains clause.
  */
 export async function lookupCropByPlu(plu: string): Promise<Crop | null> {
-  const q = query(collection(db, "crops"), where("plu", "array-contains", plu), limit(1));
-  const snapshot = await getDocs(q);
+  // Conventional codes live in `plu`, organic (9-prefixed) in `organicPlu`; both
+  // resolve to the same crop doc. Separate queries since Firestore can't
+  // array-contains across two fields without an OR query.
+  let snapshot = await getDocs(query(collection(db, "crops"), where("plu", "array-contains", plu), limit(1)));
+  if (snapshot.empty) {
+    snapshot = await getDocs(query(collection(db, "crops"), where("organicPlu", "array-contains", plu), limit(1)));
+  }
   if (snapshot.empty) return null;
   const docSnap = snapshot.docs[0];
   const crop = toCrop(docSnap.id, docSnap.data());
@@ -65,7 +72,13 @@ let cachedKnownPlus: Promise<Set<string>> | null = null;
 export async function getAllKnownPlus(): Promise<Set<string>> {
   if (!cachedKnownPlus) {
     cachedKnownPlus = getDocs(collection(db, "crops")).then(
-      (snapshot) => new Set(snapshot.docs.flatMap((d) => (d.data() as CropDoc).plu)),
+      (snapshot) =>
+        new Set(
+          snapshot.docs.flatMap((d) => {
+            const data = d.data() as CropDoc;
+            return [...data.plu, ...(data.organicPlu ?? [])];
+          }),
+        ),
     );
   }
   return cachedKnownPlus;

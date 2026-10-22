@@ -21,7 +21,7 @@ import type { CropSourceMapping } from "./types.js";
  * retail forms like "cherry tomato" from the base crop, so tomato-cherry
  * maps to the plain TOMATOES site.
  */
-export const CROP_SEED: CropSourceMapping[] = [
+const CONVENTIONAL_SEED: Omit<CropSourceMapping, "organicPlu">[] = [
   {
     cropId: "apple",
     cropName: "Apples",
@@ -745,3 +745,18 @@ export const CROP_SEED: CropSourceMapping[] = [
     imageUrl: "https://images.pexels.com/photos/23826933/pexels-photo-23826933.jpeg",
   },
 ];
+
+/**
+ * IFPS organic PLU rule: an organic item's code is its conventional 4-digit
+ * code with a 9 prefix (Fuji 4131 -> organic 94131). Derived here instead of
+ * hand-listed so the rule lives in one place; crops.seed.test.ts guards the
+ * shape. (The 8-prefix code is a retired GMO convention and is not seeded.)
+ */
+export function organicPluFor(conventionalPlu: string): string {
+  return `9${conventionalPlu}`;
+}
+
+export const CROP_SEED: CropSourceMapping[] = CONVENTIONAL_SEED.map((crop) => ({
+  ...crop,
+  organicPlu: crop.plu.map(organicPluFor),
+}));

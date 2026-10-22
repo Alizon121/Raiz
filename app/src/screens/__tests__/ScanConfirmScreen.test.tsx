@@ -110,3 +110,26 @@ test("when the lookup itself fails, shows an error state with a retry option", a
   });
   expect(mockNavigate).toHaveBeenCalledWith("Scan");
 });
+
+test("confirming an organic (9-prefixed) PLU passes organic: true to ProduceDetail", async () => {
+  mockLookupCropByPlu.mockResolvedValue({ cropId: "apple", cropName: "Apples" });
+  await renderScreen("94131");
+
+  await act(async () => {
+    fireEvent.press(screen.getByText("Yes, that's right"));
+  });
+  expect(mockReplace).toHaveBeenCalledWith("ProduceDetail", { cropId: "apple", organic: true });
+});
+
+test("an organic PLU shows 'Organic <crop>' as the title", async () => {
+  mockLookupCropByPlu.mockResolvedValue({ cropId: "apple", cropName: "Apples" });
+  await renderScreen("94131");
+  expect(screen.getByText("Organic Apples")).toBeTruthy();
+});
+
+test("a conventional PLU shows the plain crop name as the title", async () => {
+  mockLookupCropByPlu.mockResolvedValue({ cropId: "apple", cropName: "Apples" });
+  await renderScreen("4131");
+  expect(screen.getByText("Apples")).toBeTruthy();
+  expect(screen.queryByText("Organic Apples")).toBeNull();
+});

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
@@ -10,6 +11,7 @@ import ScreenBackground from "../components/ScreenBackground";
 import type { FavoritesStackParamList } from "../navigation/types";
 import { getFavorites } from "../services/favorites";
 import type { FavoriteEntry } from "../types/favorite";
+import { displayCropName } from "../utils/plu";
 import { colors, radii, spacing, typography } from "../theme";
 
 type Props = NativeStackScreenProps<FavoritesStackParamList, "Favorites">;
@@ -63,18 +65,25 @@ export default function FavoriteScreen({ navigation }: Props) {
                     contentContainerStyle={styles.list}
                     renderItem={({ item }) => (
                         <TouchableOpacity
-                            style={styles.row}
-                            onPress={() => navigation.navigate("ProduceDetail", { cropId: item.cropId })}
+                            style={[styles.row, item.organic && styles.rowImageWrap]}
+                            onPress={() => navigation.navigate("ProduceDetail", item.organic ? { cropId: item.cropId, organic: true } : { cropId: item.cropId })}
                         >
-                            {item.imageUrl ? (
-                                <Image source={{ uri: item.imageUrl }} style={styles.rowImage} />
-                            ) : (
-                                <View style={styles.rowImage}>
-                                    <IconBadge name="leaf-outline" size={48} />
-                                </View>
-                            )}
+                            <View style={styles.rowImageWrap}>
+                                {item.imageUrl ? (
+                                    <Image source={{ uri: item.imageUrl }} style={styles.rowImage} />
+                                ) : (
+                                    <View style={styles.rowImage}>
+                                        <IconBadge name="leaf-outline" size={48} />
+                                    </View>
+                                )}
+                                {item.organic && (
+                                    <View style={styles.organicBadge}>
+                                        <Ionicons name="leaf" size={12} color={colors.white} />
+                                    </View>
+                                )}
+                            </View>
                             <View style={styles.rowTextGroup}>
-                                <Text style={styles.rowTitle}>{item.cropName}</Text>
+                                <Text style={styles.rowTitle}>{displayCropName(item.cropName, item.organic)}</Text>
                             </View>
                             <Text style={styles.rowArrow}> {">"} </Text>
                         </TouchableOpacity>
@@ -103,7 +112,22 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         marginBottom: spacing.sm,
     },
-    rowImage: { width: 48, height: 48, borderRadius: radii.sm, marginRight: spacing.sm },
+    rowOrganic: { backgroundColor: "#E4F0E4", borderColor: colors.sageBold },
+    rowImageWrap: { marginRight: spacing.sm },
+    rowImage: { width: 48, height: 48, borderRadius: radii.sm },
+    organicBadge: {
+        position: "absolute",
+        right: -6,
+        bottom: -6,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        backgroundColor: colors.forest,
+        borderWidth: 2,
+        borderColor: colors.white,
+        alignItems: "center",
+        justifyContent: "center",
+    },
     rowTextGroup: { flex: 1, paddingRight: spacing.sm },
     rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
     rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 },

@@ -232,12 +232,14 @@ export async function buildAllCropDocs(
     docs[crop.cropId] = {
       cropName: crop.cropName,
       plu: crop.plu,
+      organicPlu: crop.organicPlu,
       commonAliases: crop.commonAliases,
       chemicalUse,
       registeredProducts,
       residueData,
       residueReductionTips: getResidueReductionTips(crop.cropId),
       imageUrl: crop.imageUrl ?? null,
+      organicImageUrl: crop.organicImageUrl ?? null,
       lastUpdated: new Date().toISOString(),
     };
   }

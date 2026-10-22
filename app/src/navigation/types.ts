@@ -11,14 +11,16 @@ type PesticideInformationParams = {
   chemicalUse: ChemicalUse | null;
   registeredProducts: RegisteredProducts | null;
   residueData: ResidueData | null;
+  /** True when the user scanned/typed an organic (9-prefixed) PLU: shows organic residue results first. */
+  scannedAsOrganic?: boolean;
 };
 
 export type ScanStackParamList = {
   Scan: undefined;
   ScanConfirm: { plu: string };
   ManualEntry: undefined;
-  ProduceDetail: { cropId: string };
-  ResidueReductionTips: { cropName: string; tips: string[] };
+  ProduceDetail: { cropId: string; organic?: boolean };
+  ResidueReductionTips: { cropName: string; tips: string[]; organic?: boolean };
   PesticideInformation: PesticideInformationParams;
 };
 
@@ -29,15 +31,15 @@ export type ScanStackParamList = {
 // tab's stack.
 export type HistoryStackParamList = {
   History: undefined;
-  ProduceDetail: { cropId: string };
-  ResidueReductionTips: { cropName: string; tips: string[] };
+  ProduceDetail: { cropId: string; organic?: boolean };
+  ResidueReductionTips: { cropName: string; tips: string[]; organic?: boolean };
   PesticideInformation: PesticideInformationParams;
 };
 
 export type FavoritesStackParamList = {
   Favorites: undefined;
-  ProduceDetail: { cropId: string };
-  ResidueReductionTips: { cropName: string; tips: string[] };
+  ProduceDetail: { cropId: string; organic?: boolean };
+  ResidueReductionTips: { cropName: string; tips: string[]; organic?: boolean };
   PesticideInformation: PesticideInformationParams;
 };
 

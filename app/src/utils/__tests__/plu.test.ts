@@ -1,4 +1,4 @@
-import { extractPluCandidates, isValidPluFormat, resolveBestPluCandidate } from "../plu";
+import { extractPluCandidates, isOrganicPlu, isValidPluFormat, resolveBestPluCandidate } from "../plu";
 
 describe("isValidPluFormat", () => {
   test.each(["4131", "94131", "0000"])("accepts 4-5 digit codes like %s", (code) => {
@@ -49,5 +49,14 @@ describe("resolveBestPluCandidate", () => {
 
   test("returns null when there are no candidates at all", () => {
     expect(resolveBestPluCandidate([], new Set(["4131"]))).toBeNull();
+  });
+});
+
+describe("isOrganicPlu", () => {
+  test("is true only for 5-digit codes starting with 9", () => {
+    expect(isOrganicPlu("94131")).toBe(true);
+    expect(isOrganicPlu("4131")).toBe(false);
+    expect(isOrganicPlu("84131")).toBe(false);
+    expect(isOrganicPlu("9413")).toBe(false);
   });
 });

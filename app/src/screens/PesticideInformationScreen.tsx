@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import AdBanner from "../components/AdBanner";
 import ScreenBackground from "../components/ScreenBackground";
-import { findingsNearTolerance } from "../utils/chemicalProfile";
-import type { ChemicalUse, RegisteredProducts, ResidueData } from "../types/crop";
+import { findingsNearTolerance, selectResiduePool } from "../utils/chemicalProfile";
+import type { ChemicalUse, RegisteredProducts, ResidueData, ResidueFinding } from "../types/crop";
 import { colors, radii, spacing, typography } from "../theme";
 
 // The old (non-Fabric) Android renderer required this opt-in per-process;
@@ -35,6 +35,7 @@ type Props = {
             chemicalUse: ChemicalUse | null;
             registeredProducts: RegisteredProducts | null;
             residueData: ResidueData | null;
+            scannedAsOrganic?: boolean;
         };
     };
 };
@@ -47,11 +48,59 @@ function EmptySection({ text }: { text: string }) {
     return <Text style={styles.emptyText}>{text}</Text>;
 }
 
+// One pool of PDP samples (conventional or organic). Distinguishes "nothing was
+// tested" from "tested, nothing detected" so an empty list is never ambiguous.
+function ResidueFindingsList({
+    findings,
+    sampleSize,
+    sampleLabel,
+    cumulativeExposureNote,
+}: {
+    findings: ResidueFinding[];
+    sampleSize: number;
+    sampleLabel: string;
+    cumulativeExposureNote: string;
+}) {
+    if (sampleSize === 0) {
+        return <EmptySection text={`No ${sampleLabel} samples of this crop were tested this year, so there are no findings to show.`} />;
+    }
+    if (findings.length === 0) {
+        return <EmptySection text={`No pesticide residues were detected in the ${sampleLabel} samples tested.`} />;
+    }
+    const nearToleranceNames = new Set(findingsNearTolerance({ findings }).map((f) => f.chemical));
+    return (
+        <>
+            <View style={styles.card}>
+                {findings.map((f) => {
+                    const isNearTolerance = nearToleranceNames.has(f.chemical);
+                    return (
+                        <View key={f.chemical} style={styles.row}>
+                            <View style={styles.rowTextGroup}>
+                                <Text style={styles.rowLabel}>
+                                    {f.chemical}
+                                    {isNearTolerance && <Text style={styles.nearToleranceTag}> Near limit</Text>}
+                                </Text>
+                                <Text style={styles.rowMeta}>
+                                    {f.percentSamplesDetected}% of samples · median {f.medianConcentration} {f.units}
+                                </Text>
+                            </View>
+                            <Text style={[styles.rowValue, isNearTolerance && styles.rowValueCaution]}>
+                                {f.legalTolerance !== null ? `${f.legalTolerance} ${f.units} limit` : (f.toleranceNote ?? "—")}
+                            </Text>
+                        </View>
+                    );
+                })}
+            </View>
+            {findings.length > 1 && <Text style={styles.footnote}>{cumulativeExposureNote}</Text>}
+        </>
+    );
+}
+
 // Collapsed by default so the screen opens as a short, scannable list of
 // section titles rather than every chemical/product/finding table at once —
 // tapping a header reveals that section's detail.
-function AccordionSection({ title, children }: { title: string; children: ReactNode }) {
-    const [expanded, setExpanded] = useState(false);
+function AccordionSection({ title, children, defaultExpanded = false }: { title: string; children: ReactNode; defaultExpanded?: boolean }) {
+    const [expanded, setExpanded] = useState(defaultExpanded);
 
     function toggle() {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -71,9 +120,9 @@ function AccordionSection({ title, children }: { title: string; children: ReactN
 
 export default function PesticideInformationScreen({ route }: Props) {
     const headerHeight = useHeaderHeight();
-    const { cropName, chemicalUse, registeredProducts, residueData } = route.params;
-    const nearTolerance = findingsNearTolerance(residueData);
-    const nearToleranceNames = new Set(nearTolerance.map((f) => f.chemical));
+    const { cropName, chemicalUse, registeredProducts, residueData, scannedAsOrganic = false } = route.params;
+
+    const pool = selectResiduePool(residueData, scannedAsOrganic);
 
     return (
         <ScreenBackground>
@@ -82,6 +131,7 @@ export default function PesticideInformationScreen({ route }: Props) {
 
             {/* --- Common pesticide active ingredients (USDA Ag Chemical Use) --- */}
             <AccordionSection title="Common Active Ingredients">
+            {scannedAsOrganic && <Text style={styles.footnote}>This section is not organic-specific.</Text>}
             {chemicalUse ? (
                 <>
                     <SourceCaption>
@@ -115,6 +165,7 @@ export default function PesticideInformationScreen({ route }: Props) {
 
             {/* --- Registered products/labels (EPA PPLS) --- */}
             <AccordionSection title="Registered Products">
+            {scannedAsOrganic && <Text style={styles.footnote}>This section is not organic-specific.</Text>}
             {registeredProducts && registeredProducts.activeIngredients.length > 0 ? (
                 <>
                     <SourceCaption>EPA Pesticide Product Label System · as of {registeredProducts.sourceDate}</SourceCaption>
@@ -143,42 +194,34 @@ export default function PesticideInformationScreen({ route }: Props) {
             </AccordionSection>
 
             {/* --- Residue findings vs. legal tolerance (USDA/FDA PDP) --- */}
-            <AccordionSection title="Residue Findings">
-            {residueData && residueData.findings.length > 0 ? (
+            <AccordionSection title="Residue Findings" defaultExpanded={scannedAsOrganic}>
+            {pool && residueData ? (
                 <>
                     <SourceCaption>
-                        USDA/FDA Pesticide Data Program · {residueData.sourceYear} · {residueData.sampleSize} samples tested
+                        USDA/FDA Pesticide Data Program · {pool.sourceYear} · {pool.sampleSize} {pool.label} samples tested
                     </SourceCaption>
-                    {residueData.dataAgeWarning && (
+                    {pool.dataAgeWarning && (
                         <Text style={styles.warningText}>This data is more than 3 years old — treat it as a rough guide.</Text>
                     )}
                     <Text style={styles.footnote}>
                         Disclaimer: Legal tolerances already include a large built-in safety margin, and a detection below tolerance should not be alarming
                         .
                     </Text>
-                    <View style={styles.card}>
-                        {residueData.findings.map((f) => {
-                            const isNearTolerance = nearToleranceNames.has(f.chemical);
-                            return (
-                                <View key={f.chemical} style={styles.row}>
-                                    <View style={styles.rowTextGroup}>
-                                        <Text style={styles.rowLabel}>
-                                            {f.chemical}
-                                            {isNearTolerance && <Text style={styles.nearToleranceTag}> Near limit</Text>}
-                                        </Text>
-                                        <Text style={styles.rowMeta}>
-                                            {f.percentSamplesDetected}% of samples · median {f.medianConcentration} {f.units}
-                                        </Text>
-                                    </View>
-                                    <Text style={[styles.rowValue, isNearTolerance && styles.rowValueCaution]}>
-                                        {f.legalTolerance !== null ? `${f.legalTolerance} ${f.units} limit` : (f.toleranceNote ?? "—")}
-                                    </Text>
-                                </View>
-                            );
-                        })}
-                    </View>
-                    {residueData.findings.length > 1 && <Text style={styles.footnote}>{residueData.cumulativeExposureNote}</Text>}
+                    {pool.label === "organic" && (
+                        <Text style={styles.footnote}>
+                            Samples sold with an organic marketing claim. This is a label on the sample, not a verified certification
+                            or a guarantee that no pesticides are present.
+                        </Text>
+                    )}
+                    <ResidueFindingsList
+                        findings={pool.findings}
+                        sampleSize={pool.sampleSize}
+                        sampleLabel={pool.label}
+                        cumulativeExposureNote={residueData.cumulativeExposureNote}
+                    />
                 </>
+            ) : scannedAsOrganic && residueData ? (
+                <EmptySection text="No organic samples of this crop were found in the recent USDA/FDA testing years." />
             ) : (
                 <EmptySection text="No USDA/FDA residue testing data available for this crop yet." />
             )}
@@ -205,6 +248,7 @@ const styles = StyleSheet.create({
     sourceCaption: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
     warningText: { ...typography.caption, color: colors.danger, marginBottom: spacing.xs },
     emptyText: { ...typography.body, color: colors.textSecondary, fontStyle: "italic" },
+    subsectionLabel: { ...typography.body, color: colors.textPrimary, fontWeight: "700", marginTop: spacing.md, marginBottom: spacing.xs },
     footnote: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.sm },
     card: { backgroundColor: colors.white, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
     row: {

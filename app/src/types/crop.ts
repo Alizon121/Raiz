@@ -42,17 +42,24 @@ export interface ResidueData {
   findings: ResidueFinding[];
   dataAgeWarning: boolean;
   cumulativeExposureNote: string;
+  /** Organic-labeled samples (PDP claim PO), reported apart from the conventional stats above.
+   * Has its own sourceYear because it falls back through older years independently. */
+  organic?: { sourceYear: number; sampleSize: number; findings: ResidueFinding[]; dataAgeWarning: boolean } | null;
 }
 
 export interface CropDoc {
   cropName: string;
   plu: string[];
+  /** 5-digit organic PLUs (9 + conventional code); optional so older cached/Firestore docs still load. */
+  organicPlu?: string[];
   commonAliases: string[];
   chemicalUse: ChemicalUse | null;
   registeredProducts: RegisteredProducts | null;
   residueData: ResidueData | null;
   residueReductionTips: string[];
   imageUrl: string | null;
+  /** Photo for organic scans; falls back to imageUrl when unset. */
+  organicImageUrl?: string | null;
   lastUpdated: Date; // stored as a Firestore Timestamp; converted to Date on read
 }
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CROP_SEED } from "./crops.seed.js";
+import { CROP_SEED, organicPluFor } from "./crops.seed.js";
 
 // These are cheap sanity checks against copy-paste mistakes when extending
 // the seed list (e.g. reusing a PLU or EPA site code from the crop above),
@@ -65,4 +65,30 @@ test("crops.seed: no two crops share an EPA site code or a PDP commodity code, a
 test("crops.seed: no two crops share a PLU code", () => {
   const plus = CROP_SEED.flatMap((c) => c.plu);
   assert.equal(new Set(plus).size, plus.length, "a PLU code is assigned to more than one crop");
+});
+
+test("crops.seed: every crop has one 5-digit 9-prefixed organic PLU per conventional PLU", () => {
+  for (const crop of CROP_SEED) {
+    assert.equal(crop.organicPlu.length, crop.plu.length, `${crop.cropId} organicPlu count mismatch`);
+    crop.plu.forEach((plu, i) => {
+      assert.match(plu, /^\d{4}$/, `${crop.cropId} conventional PLU ${plu} is not 4 digits`);
+      assert.equal(crop.organicPlu[i], organicPluFor(plu));
+      assert.match(crop.organicPlu[i], /^9\d{4}$/);
+    });
+  }
+  assert.equal(organicPluFor("4131"), "94131");
+});
+
+test("crops.seed: organic PLUs never collide with any crop's conventional or organic PLUs", () => {
+  const all = CROP_SEED.flatMap((c) => [...c.plu, ...c.organicPlu]);
+  assert.equal(new Set(all).size, all.length, "a PLU appears more than once across conventional/organic codes");
+});
+
+test("crops.seed: every conventional PLU is in IFPS's 3000-4999 range, the only range the 9-prefix organic rule applies to", () => {
+  for (const crop of CROP_SEED) {
+    for (const plu of crop.plu) {
+      const n = Number(plu);
+      assert.ok(n >= 3000 && n <= 4999, `${crop.cropId} PLU ${plu} is outside 3000-4999`);
+    }
+  }
 });

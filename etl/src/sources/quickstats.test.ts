@@ -7,6 +7,7 @@ const apple: CropSourceMapping = {
   cropId: "apple",
   cropName: "Apples",
   plu: ["4131"],
+  organicPlu: ["94131"],
   commonAliases: ["apple"],
   quickStatsCommodity: "APPLES",
   epaSiteCodes: ["040010106"],

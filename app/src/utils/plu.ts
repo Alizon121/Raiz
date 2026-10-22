@@ -26,3 +26,13 @@ export function resolveBestPluCandidate(candidates: string[], knownPlus: Readonl
   const knownMatch = candidates.find((c) => knownPlus.has(c));
   return knownMatch ?? candidates[0] ?? null;
 }
+
+/** Organic PLUs are the conventional 4-digit code with a 9 prefix (e.g. 94131). */
+export function isOrganicPlu(plu: string): boolean {
+  return /^9\d{4}$/.test(plu.trim());
+}
+
+/** "Apples" -> "Organic Apples" for an organic scan; unchanged otherwise. */
+export function displayCropName(cropName: string, organic: boolean): string {
+  return organic ? `Organic ${cropName}` : cropName;
+}

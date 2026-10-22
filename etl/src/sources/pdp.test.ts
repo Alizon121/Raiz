@@ -8,6 +8,7 @@ const apple: CropSourceMapping = {
   cropId: "apple",
   cropName: "Apples",
   plu: ["4131"],
+  organicPlu: ["94131"],
   commonAliases: ["apple"],
   quickStatsCommodity: "APPLES",
   epaSiteCodes: ["040010106"],
@@ -20,11 +21,11 @@ const apple: CropSourceMapping = {
 function makeDataset() {
   return {
     samples: [
-      { samplePk: "1", commod: "AP" },
-      { samplePk: "2", commod: "AP" },
-      { samplePk: "3", commod: "AP" },
-      { samplePk: "4", commod: "AP" },
-      { samplePk: "99", commod: "OG" }, // different crop — must not leak in
+      { samplePk: "1", commod: "AP", claim: "NC" },
+      { samplePk: "2", commod: "AP", claim: "NC" },
+      { samplePk: "3", commod: "AP", claim: "NC" },
+      { samplePk: "4", commod: "AP", claim: "NC" },
+      { samplePk: "99", commod: "OG", claim: "NC" }, // different crop — must not leak in
     ],
     results: [
       // pest "001" detected on 2 of 4 apple samples
@@ -127,11 +128,107 @@ test("buildResidueDataForYear: sourceYear reflects whichever year was actually p
   assert.equal(result!.sourceYear, 2019);
 });
 
-// --- buildResidueData: multi-year fallback orchestrator ---
-// loadYear is injected instead of hitting the real network/zip downloads —
-// see the PdpDataset fixture pattern above.
+// --- organic vs. conventional separation ---
+
+function makeMixedClaimDataset() {
+  const d = makeDataset();
+  // Two organic apple samples: pest 001 detected on one of them, and a pest
+  // (005) that only ever shows up on organic.
+  d.samples.push({ samplePk: "10", commod: "AP", claim: "PO" }, { samplePk: "11", commod: "AP", claim: "PO" });
+  d.results.push(
+    { samplePk: "10", commod: "AP", pestCode: "001", concen: 0.01, conUnit: "M" as const },
+    { samplePk: "11", commod: "AP", pestCode: "001", concen: null, conUnit: "M" as const },
+    { samplePk: "10", commod: "AP", pestCode: "005", concen: 0.2, conUnit: "B" as const },
+  );
+  d.pestNameByCode.set("005", "Organic Only Pesticide");
+  return d;
+}
+
+test("buildResidueDataForYear: organic (PO) samples are excluded from the conventional stats", () => {
+  const result = buildResidueDataForYear(apple, makeMixedClaimDataset(), 2024)!;
+  assert.equal(result.sampleSize, 4); // not 6
+  const pest001 = result.findings.find((f) => f.chemical === "Pyrimethanil")!;
+  assert.equal(pest001.percentSamplesDetected, 50); // organic samples don't dilute the denominator
+  assert.equal(pest001.medianConcentration, 0.03); // organic 0.01 doesn't pull the median down
+  assert.equal(result.findings.some((f) => f.chemical === "Organic Only Pesticide"), false);
+});
+
+test("buildResidueDataForYear: organic block has its own sample size and findings", () => {
+  const result = buildResidueDataForYear(apple, makeMixedClaimDataset(), 2024)!;
+  assert.ok(result.organic);
+  assert.equal(result.organic.sampleSize, 2);
+  const pest001 = result.organic.findings.find((f) => f.chemical === "Pyrimethanil")!;
+  assert.equal(pest001.percentSamplesDetected, 50); // 1 of 2 organic samples
+  assert.equal(pest001.medianConcentration, 0.01);
+  assert.ok(result.organic.findings.some((f) => f.chemical === "Organic Only Pesticide"));
+});
+
+test("buildResidueDataForYear: organic is null when the year has no organic samples", () => {
+  const result = buildResidueDataForYear(apple, makeDataset(), 2024)!;
+  assert.equal(result.organic, null);
+});
+
+test("buildResidueDataForYear: PD and PP claims stay in the conventional pool, not organic", () => {
+  const d = makeDataset();
+  d.samples.push({ samplePk: "20", commod: "AP", claim: "PD" }, { samplePk: "21", commod: "AP", claim: "PP" });
+  const result = buildResidueDataForYear(apple, d, 2024)!;
+  assert.equal(result.sampleSize, 6);
+  assert.equal(result.organic, null);
+});
+
+test("buildResidueDataForYear: a missing claim is treated as conventional", () => {
+  const d = makeDataset();
+  d.samples.push({ samplePk: "30", commod: "AP", claim: "" });
+  assert.equal(buildResidueDataForYear(apple, d, 2024)!.sampleSize, 5);
+});
+
+test("buildResidueDataForYear: an organic-only year leaves the conventional side empty and still returns the organic block", () => {
+  const d = makeMixedClaimDataset();
+  d.samples = d.samples.filter((s) => s.commod !== "AP" || s.claim === "PO");
+  const result = buildResidueDataForYear(apple, d, 2024)!;
+  assert.equal(result.sampleSize, 0);
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.organic!.sampleSize, 2);
+});
 
 const emptyDataset: PdpDataset = { samples: [], results: [], toleranceByKey: new Map(), pestNameByCode: new Map() };
+
+function onlyPool(d: ReturnType<typeof makeMixedClaimDataset>, keep: "PO" | "conv") {
+  d.samples = d.samples.filter((s) => s.commod !== "AP" || (keep === "PO" ? s.claim === "PO" : s.claim !== "PO"));
+  return d;
+}
+
+test("buildResidueData: an organic-only newest year leaves the conventional side to fall back on its own year", async () => {
+  const result = await buildResidueData(apple, async (year) =>
+    year === PDP_LATEST_YEAR ? onlyPool(makeMixedClaimDataset(), "PO") : onlyPool(makeMixedClaimDataset(), "conv"),
+  );
+  assert.equal(result!.organic!.sourceYear, PDP_LATEST_YEAR);
+  assert.equal(result!.sourceYear, PDP_LATEST_YEAR - 1); // conventional came from the next year back
+  assert.equal(result!.sampleSize, 4);
+});
+
+test("buildResidueData: organic falls back to an older year when the newest year has none", async () => {
+  const organicYear = PDP_LATEST_YEAR - 2;
+  const result = await buildResidueData(apple, async (year) =>
+    year === organicYear ? makeMixedClaimDataset() : makeDataset(), // makeDataset has conventional only
+  );
+  assert.equal(result!.sourceYear, PDP_LATEST_YEAR); // conventional from the newest year
+  assert.equal(result!.organic!.sourceYear, organicYear);
+  assert.equal(result!.organic!.sampleSize, 2);
+});
+
+test("buildResidueData: conventional data is never used as the organic block when no year has organic samples", async () => {
+  const result = await buildResidueData(apple, async () => makeDataset());
+  assert.equal(result!.organic, null);
+  assert.equal(result!.sampleSize, 4);
+});
+
+test("buildResidueData: a crop with only organic samples in the window gets an empty conventional side", async () => {
+  const result = await buildResidueData(apple, async () => onlyPool(makeMixedClaimDataset(), "PO"));
+  assert.equal(result!.sampleSize, 0);
+  assert.deepEqual(result!.findings, []);
+  assert.equal(result!.organic!.sampleSize, 2);
+});
 
 test("buildResidueData: uses PDP_LATEST_YEAR directly when that year has the crop's data", async () => {
   const attemptedYears: number[] = [];
@@ -139,8 +236,18 @@ test("buildResidueData: uses PDP_LATEST_YEAR directly when that year has the cro
     attemptedYears.push(year);
     return makeDataset(); // has apple ("AP") data at every year queried
   });
-  assert.deepEqual(attemptedYears, [PDP_LATEST_YEAR]);
+  // makeDataset has no organic samples, so the organic walk continues through the whole window.
+  assert.equal(attemptedYears.length, PDP_MAX_FALLBACK_YEARS);
   assert.equal(result!.sourceYear, PDP_LATEST_YEAR);
+});
+
+test("buildResidueData: stops after the newest year when it has both conventional and organic samples", async () => {
+  const attemptedYears: number[] = [];
+  await buildResidueData(apple, async (year) => {
+    attemptedYears.push(year);
+    return makeMixedClaimDataset();
+  });
+  assert.deepEqual(attemptedYears, [PDP_LATEST_YEAR]);
 });
 
 test("buildResidueData: falls back to older years in order until one has the crop's data", async () => {
@@ -150,7 +257,8 @@ test("buildResidueData: falls back to older years in order until one has the cro
     attemptedYears.push(year);
     return year === yearWithData ? makeDataset() : emptyDataset;
   });
-  assert.deepEqual(attemptedYears, [PDP_LATEST_YEAR, PDP_LATEST_YEAR - 1, PDP_LATEST_YEAR - 2]);
+  // organic can't resolve either (fixture has none), so every year in the window is tried.
+  assert.equal(attemptedYears.length, PDP_MAX_FALLBACK_YEARS);
   assert.equal(result!.sourceYear, yearWithData);
 });
 
