@@ -1,11 +1,11 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
 import EmptyState from "../components/EmptyState";
-import IconBadge from "../components/IconBadge";
+import ProduceThumbnail from "../components/ProduceThumbnail";
 import ScreenBackground from "../components/ScreenBackground";
 import type { HistoryStackParamList } from "../navigation/types";
 import { getScanHistory } from "../services/scanHistory";
@@ -71,13 +71,7 @@ export default function HistoryScreen({ navigation }: Props) {
               style={styles.row}
               onPress={() => navigation.navigate("ProduceDetail", isOrganicPlu(item.plu) ? { cropId: item.cropId, organic: true } : { cropId: item.cropId })}
             >
-              {item.imageUrl ? (
-                <Image source={{ uri: item.imageUrl }} style={styles.rowImage} />
-              ) : (
-                <View style={styles.rowImage}>
-                  <IconBadge name="leaf-outline" size={48} />
-                </View>
-              )}
+              <ProduceThumbnail imageUrl={item.imageUrl} organic={isOrganicPlu(item.plu)} />
               <View style={styles.rowTextGroup}>
                 <Text style={styles.rowTitle}>{displayCropName(item.cropName, isOrganicPlu(item.plu))}</Text>
                 <Text style={styles.rowMeta}>PLU {item.plu}</Text>
@@ -110,7 +104,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
-  rowImage: { width: 48, height: 48, borderRadius: radii.sm, marginRight: spacing.sm },
   rowTextGroup: { flex: 1, paddingRight: spacing.sm },
   rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
   rowMeta: { ...typography.caption, color: colors.textSecondary },

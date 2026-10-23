@@ -1,12 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../auth/AuthContext";
 import AdBanner from "../components/AdBanner";
 import EmptyState from "../components/EmptyState";
-import IconBadge from "../components/IconBadge";
+import ProduceThumbnail from "../components/ProduceThumbnail";
 import ScreenBackground from "../components/ScreenBackground";
 import type { FavoritesStackParamList } from "../navigation/types";
 import { getFavorites } from "../services/favorites";
@@ -68,20 +67,7 @@ export default function FavoriteScreen({ navigation }: Props) {
                             style={[styles.row, item.organic && styles.rowImageWrap]}
                             onPress={() => navigation.navigate("ProduceDetail", item.organic ? { cropId: item.cropId, organic: true } : { cropId: item.cropId })}
                         >
-                            <View style={styles.rowImageWrap}>
-                                {item.imageUrl ? (
-                                    <Image source={{ uri: item.imageUrl }} style={styles.rowImage} />
-                                ) : (
-                                    <View style={styles.rowImage}>
-                                        <IconBadge name="leaf-outline" size={48} />
-                                    </View>
-                                )}
-                                {item.organic && (
-                                    <View style={styles.organicBadge}>
-                                        <Ionicons name="leaf" size={12} color={colors.white} />
-                                    </View>
-                                )}
-                            </View>
+                            <ProduceThumbnail imageUrl={item.imageUrl} organic={item.organic} />
                             <View style={styles.rowTextGroup}>
                                 <Text style={styles.rowTitle}>{displayCropName(item.cropName, item.organic)}</Text>
                             </View>
@@ -114,20 +100,6 @@ const styles = StyleSheet.create({
     },
     rowOrganic: { backgroundColor: "#E4F0E4", borderColor: colors.sageBold },
     rowImageWrap: { marginRight: spacing.sm },
-    rowImage: { width: 48, height: 48, borderRadius: radii.sm },
-    organicBadge: {
-        position: "absolute",
-        right: -6,
-        bottom: -6,
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        backgroundColor: colors.forest,
-        borderWidth: 2,
-        borderColor: colors.white,
-        alignItems: "center",
-        justifyContent: "center",
-    },
     rowTextGroup: { flex: 1, paddingRight: spacing.sm },
     rowTitle: { ...typography.body, color: colors.forest, fontWeight: "600" },
     rowArrow: { ...typography.body, color: colors.textSecondary, marginLeft: 10 },
