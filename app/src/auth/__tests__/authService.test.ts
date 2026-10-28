@@ -7,6 +7,7 @@ jest.mock("../../firebase/config", () => ({ auth: { __fake: "auth" }, functions:
 const mockSignInWithEmailAndPassword = jest.fn();
 const mockCreateUserWithEmailAndPassword = jest.fn();
 const mockFirebaseSignOut = jest.fn();
+const mockSendPasswordResetEmail = jest.fn();
 const mockSignInWithCredential = jest.fn();
 const mockOAuthProviderCredential = jest.fn();
 const mockGoogleAuthProviderCredential = jest.fn();
@@ -15,6 +16,7 @@ jest.mock("firebase/auth", () => ({
   signInWithEmailAndPassword: (...args: unknown[]) => mockSignInWithEmailAndPassword(...args),
   createUserWithEmailAndPassword: (...args: unknown[]) => mockCreateUserWithEmailAndPassword(...args),
   signOut: (...args: unknown[]) => mockFirebaseSignOut(...args),
+  sendPasswordResetEmail: (...args: unknown[]) => mockSendPasswordResetEmail(...args),
   signInWithCredential: (...args: unknown[]) => mockSignInWithCredential(...args),
   OAuthProvider: jest.fn().mockImplementation(() => ({ credential: mockOAuthProviderCredential })),
   GoogleAuthProvider: { credential: (...args: unknown[]) => mockGoogleAuthProviderCredential(...args) },
@@ -54,6 +56,7 @@ import {
   deleteAccount,
   getLinkedProviderLabel,
   isFirebaseAuthError,
+  sendPasswordReset,
   signInWithApple,
   signInWithEmail,
   signInWithGoogle,
@@ -80,6 +83,13 @@ describe("email/password auth", () => {
   it("signOut calls Firebase's signOut with our auth instance", async () => {
     await signOut();
     expect(mockFirebaseSignOut).toHaveBeenCalledWith({ __fake: "auth" });
+  });
+});
+
+describe("sendPasswordReset", () => {
+  it("asks Firebase to email a reset link to the trimmed address", async () => {
+    await sendPasswordReset("  a@b.com ");
+    expect(mockSendPasswordResetEmail).toHaveBeenCalledWith({ __fake: "auth" }, "a@b.com");
   });
 });
 

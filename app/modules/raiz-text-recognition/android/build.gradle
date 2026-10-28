@@ -16,3 +16,9 @@ android {
     abortOnError false
   }
 }
+
+dependencies {
+  // Bundled (on-device) Latin text recognizer — works offline and doesn't
+  // depend on Google Play Services downloading a model at first use.
+  implementation 'com.google.mlkit:text-recognition:16.0.1'
+}

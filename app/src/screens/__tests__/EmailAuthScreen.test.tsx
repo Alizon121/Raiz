@@ -4,10 +4,12 @@ import EmailAuthScreen from "../EmailAuthScreen";
 const mockSignInWithEmail = jest.fn();
 const mockSignUpWithEmail = jest.fn();
 const mockGetLinkedProviderLabel = jest.fn();
+const mockSendPasswordReset = jest.fn();
 jest.mock("../../auth/authService", () => ({
   signInWithEmail: (...args: unknown[]) => mockSignInWithEmail(...args),
   signUpWithEmail: (...args: unknown[]) => mockSignUpWithEmail(...args),
   getLinkedProviderLabel: (...args: unknown[]) => mockGetLinkedProviderLabel(...args),
+  sendPasswordReset: (...args: unknown[]) => mockSendPasswordReset(...args),
   // Mirrors the real implementation closely enough for these tests: real
   // FirebaseErrors carry a `.code` string, which is all this checks.
   isFirebaseAuthError: (error: unknown, code: string) => (error as { code?: string } | null)?.code === code,
@@ -136,4 +138,47 @@ test("tapping Back calls navigation.goBack", async () => {
     fireEvent.press(screen.getByText("‹ Back"));
   });
   expect(mockGoBack).toHaveBeenCalledTimes(1);
+});
+
+async function pressForgotPassword() {
+  await act(async () => {
+    fireEvent.press(screen.getByText("Forgot password?"));
+  });
+}
+
+test("Forgot password is only shown in sign-in mode", async () => {
+  await renderScreen("sign-up");
+  expect(screen.queryByText("Forgot password?")).toBeNull();
+});
+
+test("Forgot password with an empty email asks for one and does not call Firebase", async () => {
+  await renderScreen("sign-in");
+  await pressForgotPassword();
+  expect(mockSendPasswordReset).not.toHaveBeenCalled();
+  expect(screen.getByText("Enter your email above, then tap Forgot password.")).toBeTruthy();
+});
+
+test("Forgot password sends a reset email and shows a non-committal confirmation", async () => {
+  mockSendPasswordReset.mockResolvedValue(undefined);
+  await renderScreen("sign-in");
+  await typeText("Email", "a@b.com");
+  await pressForgotPassword();
+  expect(mockSendPasswordReset).toHaveBeenCalledWith("a@b.com");
+  expect(screen.getByText("If an account exists for that email, we've sent a link to reset your password.")).toBeTruthy();
+});
+
+test("Forgot password surfaces an invalid-email error", async () => {
+  mockSendPasswordReset.mockRejectedValue({ code: "auth/invalid-email" });
+  await renderScreen("sign-in");
+  await typeText("Email", "nope");
+  await pressForgotPassword();
+  expect(screen.getByText("That doesn't look like a valid email address.")).toBeTruthy();
+});
+
+test("Forgot password shows a generic error on other failures", async () => {
+  mockSendPasswordReset.mockRejectedValue(new Error("network"));
+  await renderScreen("sign-in");
+  await typeText("Email", "a@b.com");
+  await pressForgotPassword();
+  expect(screen.getByText("Couldn't send the reset email. Please try again.")).toBeTruthy();
 });

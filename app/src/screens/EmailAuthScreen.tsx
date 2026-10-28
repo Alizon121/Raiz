@@ -3,7 +3,7 @@ import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../components/Button";
 import TextField from "../components/TextField";
-import { getLinkedProviderLabel, isFirebaseAuthError, signInWithEmail, signUpWithEmail } from "../auth/authService";
+import { getLinkedProviderLabel, isFirebaseAuthError, sendPasswordReset, signInWithEmail, signUpWithEmail } from "../auth/authService";
 import type { AuthStackParamList } from "../navigation/types";
 import { colors, spacing, typography } from "../theme";
 
@@ -15,9 +15,11 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const submit = async () => {
     setError(null);
+    setNotice(null);
     setBusy(true);
     try {
       await (mode === "sign-in" ? signInWithEmail(email, password) : signUpWithEmail(email, password));
@@ -32,6 +34,28 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
       } else {
         setError(e instanceof Error ? e.message : "Something went wrong.");
       }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const forgotPassword = async () => {
+    setError(null);
+    setNotice(null);
+    if (!email.trim()) {
+      setError("Enter your email above, then tap Forgot password.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await sendPasswordReset(email);
+      setNotice("If an account exists for that email, we've sent a link to reset your password.");
+    } catch (e) {
+      setError(
+        isFirebaseAuthError(e, "auth/invalid-email")
+          ? "That doesn't look like a valid email address."
+          : "Couldn't send the reset email. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -55,6 +79,7 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
       <TextField placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
 
       {error && <Text style={styles.error}>{error}</Text>}
+      {notice && <Text style={styles.notice}>{notice}</Text>}
 
       <Button
         label={mode === "sign-in" ? "Sign in" : "Sign up"}
@@ -65,7 +90,19 @@ export default function EmailAuthScreen({ route, navigation }: Props) {
         testID="email-auth-submit"
       />
 
-      <TouchableOpacity onPress={() => setMode(mode === "sign-in" ? "sign-up" : "sign-in")}>
+      {mode === "sign-in" && (
+        <TouchableOpacity onPress={forgotPassword} disabled={busy}>
+          <Text style={styles.forgotText}>Forgot password?</Text>
+        </TouchableOpacity>
+      )}
+
+      <TouchableOpacity
+        onPress={() => {
+          setError(null);
+          setNotice(null);
+          setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+        }}
+      >
         <Text style={styles.switchModeText}>
           {mode === "sign-in" ? "Need an account? Sign up" : "Already have an account? Sign in"}
         </Text>
@@ -80,6 +117,8 @@ const styles = StyleSheet.create({
   backText: { color: colors.forest, fontSize: 16, fontWeight: "600" },
   title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.xl, textAlign: "center" },
   error: { color: colors.danger, marginBottom: spacing.sm },
+  notice: { color: colors.forest, marginBottom: spacing.sm },
+  forgotText: { textAlign: "center", marginTop: spacing.lg, color: colors.forest, fontWeight: "600" },
   submitButton: { marginTop: spacing.xs },
   switchModeText: { textAlign: "center", marginTop: spacing.lg, color: colors.forest, fontWeight: "600" },
 });

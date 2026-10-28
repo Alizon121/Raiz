@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithCredential,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -50,6 +51,16 @@ export async function getLinkedProviderLabel(email: string): Promise<string | nu
 
 export async function signUpWithEmail(email: string, password: string) {
   return createUserWithEmailAndPassword(auth, email, password);
+}
+
+/**
+ * Emails a password-reset link. With Email Enumeration Protection on (see
+ * getLinkedProviderLabel), Firebase resolves successfully even when no
+ * account exists for the address, so callers should word their confirmation
+ * accordingly rather than implying the email was definitely sent.
+ */
+export async function sendPasswordReset(email: string) {
+  return sendPasswordResetEmail(auth, email.trim());
 }
 
 export async function signOut() {
